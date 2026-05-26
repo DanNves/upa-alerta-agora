@@ -9,38 +9,99 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as EventosRouteImport } from './routes/eventos'
+import { Route as BuscarRouteImport } from './routes/buscar'
+import { Route as AvaliarRouteImport } from './routes/avaliar'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as UpaIdRouteImport } from './routes/upa.$id'
 
+const EventosRoute = EventosRouteImport.update({
+  id: '/eventos',
+  path: '/eventos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BuscarRoute = BuscarRouteImport.update({
+  id: '/buscar',
+  path: '/buscar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AvaliarRoute = AvaliarRouteImport.update({
+  id: '/avaliar',
+  path: '/avaliar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UpaIdRoute = UpaIdRouteImport.update({
+  id: '/upa/$id',
+  path: '/upa/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/avaliar': typeof AvaliarRoute
+  '/buscar': typeof BuscarRoute
+  '/eventos': typeof EventosRoute
+  '/upa/$id': typeof UpaIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/avaliar': typeof AvaliarRoute
+  '/buscar': typeof BuscarRoute
+  '/eventos': typeof EventosRoute
+  '/upa/$id': typeof UpaIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/avaliar': typeof AvaliarRoute
+  '/buscar': typeof BuscarRoute
+  '/eventos': typeof EventosRoute
+  '/upa/$id': typeof UpaIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/avaliar' | '/buscar' | '/eventos' | '/upa/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/avaliar' | '/buscar' | '/eventos' | '/upa/$id'
+  id: '__root__' | '/' | '/avaliar' | '/buscar' | '/eventos' | '/upa/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AvaliarRoute: typeof AvaliarRoute
+  BuscarRoute: typeof BuscarRoute
+  EventosRoute: typeof EventosRoute
+  UpaIdRoute: typeof UpaIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/eventos': {
+      id: '/eventos'
+      path: '/eventos'
+      fullPath: '/eventos'
+      preLoaderRoute: typeof EventosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/buscar': {
+      id: '/buscar'
+      path: '/buscar'
+      fullPath: '/buscar'
+      preLoaderRoute: typeof BuscarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/avaliar': {
+      id: '/avaliar'
+      path: '/avaliar'
+      fullPath: '/avaliar'
+      preLoaderRoute: typeof AvaliarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,12 +109,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/upa/$id': {
+      id: '/upa/$id'
+      path: '/upa/$id'
+      fullPath: '/upa/$id'
+      preLoaderRoute: typeof UpaIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AvaliarRoute: AvaliarRoute,
+  BuscarRoute: BuscarRoute,
+  EventosRoute: EventosRoute,
+  UpaIdRoute: UpaIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
