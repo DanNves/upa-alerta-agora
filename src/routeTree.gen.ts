@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as EventosRouteImport } from './routes/eventos'
 import { Route as BuscarRouteImport } from './routes/buscar'
 import { Route as AvaliarRouteImport } from './routes/avaliar'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UpaIdRouteImport } from './routes/upa.$id'
 
@@ -30,6 +31,11 @@ const AvaliarRoute = AvaliarRouteImport.update({
   path: '/avaliar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -43,6 +49,7 @@ const UpaIdRoute = UpaIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/avaliar': typeof AvaliarRoute
   '/buscar': typeof BuscarRoute
   '/eventos': typeof EventosRoute
@@ -50,6 +57,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/avaliar': typeof AvaliarRoute
   '/buscar': typeof BuscarRoute
   '/eventos': typeof EventosRoute
@@ -58,6 +66,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/avaliar': typeof AvaliarRoute
   '/buscar': typeof BuscarRoute
   '/eventos': typeof EventosRoute
@@ -65,14 +74,22 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/avaliar' | '/buscar' | '/eventos' | '/upa/$id'
+  fullPaths: '/' | '/admin' | '/avaliar' | '/buscar' | '/eventos' | '/upa/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/avaliar' | '/buscar' | '/eventos' | '/upa/$id'
-  id: '__root__' | '/' | '/avaliar' | '/buscar' | '/eventos' | '/upa/$id'
+  to: '/' | '/admin' | '/avaliar' | '/buscar' | '/eventos' | '/upa/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/avaliar'
+    | '/buscar'
+    | '/eventos'
+    | '/upa/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   AvaliarRoute: typeof AvaliarRoute
   BuscarRoute: typeof BuscarRoute
   EventosRoute: typeof EventosRoute
@@ -102,6 +119,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AvaliarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -121,6 +145,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   AvaliarRoute: AvaliarRoute,
   BuscarRoute: BuscarRoute,
   EventosRoute: EventosRoute,
