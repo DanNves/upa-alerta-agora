@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { UPAS_SEED, type UPA, DEFAULT_USER_LOC } from "./upas";
+import { UPAS_SEED, EVENTOS_SEED, type UPA, type Evento, DEFAULT_USER_LOC } from "./upas";
 
 type FilterState = {
   ordenar: "proxima" | "ocupacao" | "tempo" | "avaliacao";
@@ -10,6 +10,7 @@ type FilterState = {
 
 type Store = {
   upas: UPA[];
+  eventos: Evento[];
   userLoc: { lat: number; lng: number };
   setUserLoc: (l: { lat: number; lng: number }) => void;
   selectedId: string | null;
@@ -18,6 +19,9 @@ type Store = {
   setFilter: (f: Partial<FilterState>) => void;
   resetFilter: () => void;
   addAvaliacao: (upaId: string, nota: number, tempo: number, comentario: string) => void;
+  updateUpa: (upaId: string, patch: Partial<UPA>) => void;
+  addEvento: (e: Omit<Evento, "id">) => void;
+  removeEvento: (id: string) => void;
 };
 
 const defaultFilter: FilterState = {
@@ -29,6 +33,7 @@ const defaultFilter: FilterState = {
 
 export const useStore = create<Store>((set) => ({
   upas: UPAS_SEED,
+  eventos: EVENTOS_SEED,
   userLoc: DEFAULT_USER_LOC,
   setUserLoc: (l) => set({ userLoc: l }),
   selectedId: null,
@@ -50,4 +55,16 @@ export const useStore = create<Store>((set) => ({
           : u,
       ),
     })),
+  updateUpa: (upaId, patch) =>
+    set((s) => ({
+      upas: s.upas.map((u) =>
+        u.id === upaId ? { ...u, ...patch, atualizado_em: new Date().toISOString() } : u,
+      ),
+    })),
+  addEvento: (e) =>
+    set((s) => ({
+      eventos: [{ ...e, id: `ev-${Date.now()}` }, ...s.eventos],
+    })),
+  removeEvento: (id) =>
+    set((s) => ({ eventos: s.eventos.filter((e) => e.id !== id) })),
 }));
