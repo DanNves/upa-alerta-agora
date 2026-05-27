@@ -31,11 +31,15 @@ function userIcon() {
   });
 }
 
-function Recenter({ center }: { center: [number, number] }) {
+function Recenter({ center, zoom }: { center: [number, number]; zoom?: number }) {
   const map = useMap();
   useEffect(() => {
-    map.setView(center);
-  }, [center, map]);
+    if (zoom != null) {
+      map.flyTo(center, zoom, { duration: 0.8 });
+    } else {
+      map.setView(center);
+    }
+  }, [center, zoom, map]);
   return null;
 }
 
