@@ -19,7 +19,7 @@ function EventosScreen() {
   const [open, setOpen] = useState<Evento | null>(null);
   const upas = useStore((s) => s.upas);
 
-  const eventos = EVENTOS_SEED;
+  const eventos = useStore((s) => s.eventos);
 
   return (
     <main className="min-h-dvh bg-background pb-24">
