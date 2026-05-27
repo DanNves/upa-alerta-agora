@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Calendar, ChevronRight, X } from "lucide-react";
 import { useStore } from "@/data/store";
-import { EVENTOS_SEED, type Evento } from "@/data/upas";
+import { type Evento } from "@/data/upas";
 import { StatusBadge } from "@/components/StatusBadge";
 import { BottomNav } from "@/components/BottomNav";
 
