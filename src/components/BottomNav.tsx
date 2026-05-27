@@ -1,11 +1,12 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Map, Search, Megaphone, Star } from "lucide-react";
+import { Map, Search, Megaphone, Star, Shield } from "lucide-react";
 
 const items = [
   { to: "/", label: "Mapa", Icon: Map },
   { to: "/buscar", label: "Busca", Icon: Search },
   { to: "/eventos", label: "Eventos", Icon: Megaphone },
   { to: "/avaliar", label: "Avaliar", Icon: Star },
+  { to: "/admin", label: "Admin", Icon: Shield },
 ] as const;
 
 export function BottomNav() {
