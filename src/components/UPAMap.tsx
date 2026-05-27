@@ -64,7 +64,7 @@ export function UPAMap({ onSelect, focusId }: { onSelect: (id: string) => void; 
       attributionControl={false}
     >
       <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
-      <Recenter center={center} />
+      <Recenter center={center} zoom={focusId ? 16 : undefined} />
       <Marker position={[userLoc.lat, userLoc.lng]} icon={userIcon()} />
       {upas.map((upa) => (
         <Marker
