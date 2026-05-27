@@ -31,11 +31,15 @@ function userIcon() {
   });
 }
 
-function Recenter({ center }: { center: [number, number] }) {
+function Recenter({ center, zoom }: { center: [number, number]; zoom?: number }) {
   const map = useMap();
   useEffect(() => {
-    map.setView(center);
-  }, [center, map]);
+    if (zoom != null) {
+      map.flyTo(center, zoom, { duration: 0.8 });
+    } else {
+      map.setView(center);
+    }
+  }, [center, zoom, map]);
   return null;
 }
 
@@ -60,7 +64,7 @@ export function UPAMap({ onSelect, focusId }: { onSelect: (id: string) => void; 
       attributionControl={false}
     >
       <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
-      <Recenter center={center} />
+      <Recenter center={center} zoom={focusId ? 16 : undefined} />
       <Marker position={[userLoc.lat, userLoc.lng]} icon={userIcon()} />
       {upas.map((upa) => (
         <Marker
