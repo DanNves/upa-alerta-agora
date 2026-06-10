@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { MapPin, Clock, Navigation, X } from "lucide-react";
+import { MapPin, Clock, Navigation, X, RefreshCw } from "lucide-react";
 import { StatusBadge } from "./StatusBadge";
-import { distanciaKm, mapsUrl, type UPA } from "@/data/upas";
+import { distanciaKm, mapsUrl, tempoAtras, type UPA } from "@/data/upas";
 import { useStore } from "@/data/store";
 
 export function UpaBottomSheet({ upa, onClose }: { upa: UPA; onClose: () => void }) {
