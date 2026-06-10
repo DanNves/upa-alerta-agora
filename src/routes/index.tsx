@@ -67,9 +67,13 @@ function MapScreen() {
     <main className="relative h-dvh w-full overflow-hidden bg-background">
       {/* Map */}
       <div className="absolute inset-0">
-        <Suspense fallback={<div className="h-full w-full animate-pulse bg-muted" />}>
-          <UPAMap onSelect={setSelected} focusId={selectedId} />
-        </Suspense>
+        {mounted ? (
+          <Suspense fallback={<div className="h-full w-full animate-pulse bg-muted" />}>
+            <UPAMap onSelect={setSelected} focusId={selectedId} />
+          </Suspense>
+        ) : (
+          <div className="h-full w-full animate-pulse bg-muted" />
+        )}
       </div>
 
       {/* Top: search + best option banner */}
