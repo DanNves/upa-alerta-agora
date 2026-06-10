@@ -58,7 +58,7 @@ export function UPAMap({ onSelect, focusId }: { onSelect: (id: string) => void; 
   return (
     <MapContainer
       center={[userLoc.lat, userLoc.lng]}
-      zoom={12}
+      zoom={11}
       className="h-full w-full"
       zoomControl={false}
       attributionControl={false}
