@@ -171,7 +171,7 @@ function UpaDetail() {
         {/* Actions */}
         <section className="grid grid-cols-1 gap-2">
           <a
-            href={mapsUrl(upa.latitude, upa.longitude, upa.nome)}
+            href={mapsUrl(upa.latitude, upa.longitude, upa.nome, userLoc)}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 font-semibold text-primary-foreground shadow-sm hover:opacity-95"
