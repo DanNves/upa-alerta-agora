@@ -25,6 +25,22 @@ function MapScreen() {
   const [query, setQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [showEmergency, setShowEmergency] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  // Atualiza localização e ocupações em tempo real (simulação)
+  useEffect(() => {
+    if (!mounted) return;
+    const t = setInterval(() => {
+      const st = useStore.getState();
+      st.upas.forEach((u) => {
+        const delta = Math.round((Math.random() - 0.5) * 6);
+        const nova = Math.max(0, Math.min(u.capacidade_max + 20, u.ocupacao_atual + delta));
+        if (nova !== u.ocupacao_atual) st.updateUpa(u.id, { ocupacao_atual: nova });
+      });
+    }, 20000);
+    return () => clearInterval(t);
+  }, [mounted]);
 
   const melhor = melhorOpcao(upas, userLoc);
   const distMelhor = melhor ? distanciaKm(userLoc, { lat: melhor.upa.latitude, lng: melhor.upa.longitude }) : 0;
