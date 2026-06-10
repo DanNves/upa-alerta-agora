@@ -64,7 +64,7 @@ export function UpaBottomSheet({ upa, onClose }: { upa: UPA; onClose: () => void
             Ver detalhes
           </Link>
           <a
-            href={mapsUrl(upa.latitude, upa.longitude, upa.nome)}
+            href={mapsUrl(upa.latitude, upa.longitude, upa.nome, userLoc)}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:opacity-95 transition"
