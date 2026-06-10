@@ -50,8 +50,9 @@ export function UpaBottomSheet({ upa, onClose }: { upa: UPA; onClose: () => void
           {upa.servicos.length > 4 ? ` · +${upa.servicos.length - 4}` : ""}
         </div>
 
-        <div className="mt-2 text-xs text-muted-foreground">
-          📍 {dist.toFixed(1)} km de você
+        <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
+          <RefreshCw className="h-3 w-3" />
+          <span>📍 {dist.toFixed(1)} km · Atualizado {tempoAtras(upa.atualizado_em)}</span>
         </div>
 
         <div className="mt-4 grid grid-cols-2 gap-2">
