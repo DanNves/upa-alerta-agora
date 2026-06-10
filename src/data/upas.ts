@@ -419,5 +419,5 @@ export function uberUrl(lat: number, lng: number) {
   return `https://m.uber.com/ul/?action=setPickup&pickup=my_location&dropoff[latitude]=${lat}&dropoff[longitude]=${lng}`;
 }
 
-// Default user location: centro de Salvador, ajustado para boa visualização
-export const DEFAULT_USER_LOC = { lat: -12.92, lng: -38.42 };
+// Localização padrão: centro geográfico das UPAs de Salvador.
+export const DEFAULT_USER_LOC = { lat: -12.925, lng: -38.46 };
