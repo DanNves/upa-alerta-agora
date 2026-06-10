@@ -267,8 +267,14 @@ export function tempoAtras(iso: string) {
   return h === 1 ? "há 1 hora" : `há ${h} horas`;
 }
 
-export function mapsUrl(lat: number, lng: number, _nome?: string) {
-  return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+export function mapsUrl(
+  lat: number,
+  lng: number,
+  _nome?: string,
+  origin?: { lat: number; lng: number },
+) {
+  const base = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+  return origin ? `${base}&origin=${origin.lat},${origin.lng}` : base;
 }
 export function uberUrl(lat: number, lng: number) {
   return `https://m.uber.com/ul/?action=setPickup&pickup=my_location&dropoff[latitude]=${lat}&dropoff[longitude]=${lng}`;
