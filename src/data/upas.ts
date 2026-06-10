@@ -333,7 +333,7 @@ export const EVENTOS_SEED: Evento[] = [
     descricao: "Campanha de imunização para crianças de 6 meses a 5 anos. Leve a caderneta de vacinação.",
     data_inicio: "2025-06-01",
     data_fim: "2025-06-30",
-    upa_ids: ["upa-itapua", "upa-cajazeiras", "upa-mussurunga", "upa-pau-da-lima"],
+    upa_ids: ["upa-itapua", "upa-sao-cristovao", "upa-paripe", "upa-valeria"],
     icone: "💉",
   },
   {
@@ -342,7 +342,7 @@ export const EVENTOS_SEED: Evento[] = [
     descricao: "Testes gratuitos com resultado em 20 minutos. Atenda à campanha do verão.",
     data_inicio: "2025-05-15",
     data_fim: "2025-07-15",
-    upa_ids: ["upa-cajazeiras", "upa-mussurunga"],
+    upa_ids: ["upa-sao-cristovao", "upa-cabula", "upa-brotas"],
     icone: "🦟",
   },
   {
@@ -351,7 +351,7 @@ export const EVENTOS_SEED: Evento[] = [
     descricao: "Mamografia gratuita e orientações de prevenção ao câncer de mama.",
     data_inicio: "2025-10-26",
     data_fim: "2025-10-26",
-    upa_ids: ["upa-itapua", "upa-periperi"],
+    upa_ids: ["upa-itapua", "upa-periperi", "upa-vale-barris"],
     icone: "🎀",
   },
 ];
