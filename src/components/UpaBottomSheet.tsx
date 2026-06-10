@@ -8,6 +8,11 @@ import { useStore } from "@/data/store";
 export function UpaBottomSheet({ upa, onClose }: { upa: UPA; onClose: () => void }) {
   const userLoc = useStore((s) => s.userLoc);
   const dist = distanciaKm(userLoc, { lat: upa.latitude, lng: upa.longitude });
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 30000);
+    return () => clearInterval(id);
+  }, []);
 
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[1000] flex justify-center px-3 pb-3 sm:pb-6">
