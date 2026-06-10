@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Search, Crosshair, SlidersHorizontal, Siren, MapPin, Clock } from "lucide-react";
 import { useStore } from "@/data/store";
 import { distanciaKm, melhorOpcao, getStatus } from "@/data/upas";
