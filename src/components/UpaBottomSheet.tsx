@@ -1,12 +1,18 @@
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { MapPin, Clock, Navigation, X } from "lucide-react";
+import { MapPin, Clock, Navigation, X, RefreshCw } from "lucide-react";
 import { StatusBadge } from "./StatusBadge";
-import { distanciaKm, mapsUrl, type UPA } from "@/data/upas";
+import { distanciaKm, mapsUrl, tempoAtras, type UPA } from "@/data/upas";
 import { useStore } from "@/data/store";
 
 export function UpaBottomSheet({ upa, onClose }: { upa: UPA; onClose: () => void }) {
   const userLoc = useStore((s) => s.userLoc);
   const dist = distanciaKm(userLoc, { lat: upa.latitude, lng: upa.longitude });
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 30000);
+    return () => clearInterval(id);
+  }, []);
 
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[1000] flex justify-center px-3 pb-3 sm:pb-6">
@@ -50,8 +56,9 @@ export function UpaBottomSheet({ upa, onClose }: { upa: UPA; onClose: () => void
           {upa.servicos.length > 4 ? ` · +${upa.servicos.length - 4}` : ""}
         </div>
 
-        <div className="mt-2 text-xs text-muted-foreground">
-          📍 {dist.toFixed(1)} km de você
+        <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
+          <RefreshCw className="h-3 w-3" />
+          <span>📍 {dist.toFixed(1)} km · Atualizado {tempoAtras(upa.atualizado_em)}</span>
         </div>
 
         <div className="mt-4 grid grid-cols-2 gap-2">
@@ -63,7 +70,7 @@ export function UpaBottomSheet({ upa, onClose }: { upa: UPA; onClose: () => void
             Ver detalhes
           </Link>
           <a
-            href={mapsUrl(upa.latitude, upa.longitude, upa.nome)}
+            href={mapsUrl(upa.latitude, upa.longitude, upa.nome, userLoc)}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:opacity-95 transition"

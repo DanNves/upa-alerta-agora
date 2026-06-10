@@ -68,7 +68,7 @@ export function UPAMap({ onSelect, focusId }: { onSelect: (id: string) => void; 
       <Marker position={[userLoc.lat, userLoc.lng]} icon={userIcon()} />
       {upas.map((upa) => (
         <Marker
-          key={upa.id}
+          key={`${upa.id}-${upa.ocupacao_atual}-${upa.capacidade_max}-${upa.aberta ? 1 : 0}`}
           position={[upa.latitude, upa.longitude]}
           icon={buildPin(upa)}
           eventHandlers={{ click: () => onSelect(upa.id) }}
