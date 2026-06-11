@@ -299,15 +299,55 @@ function CriarCampanhas() {
           className="w-full resize-none rounded-lg border border-border bg-background px-3 py-3 text-sm focus:border-primary focus:outline-none"
         />
         <div>
-          <input
-            value={upaIdsRaw}
-            onChange={(e) => setUpaIdsRaw(e.target.value)}
-            placeholder="IDs das UPAs (separado por vírgula)"
-            className="w-full rounded-lg border border-border bg-background px-3 py-3 text-sm focus:border-primary focus:outline-none"
-          />
-          <p className="mt-1 text-[10px] text-muted-foreground">
-            IDs válidos: {idsValidos}
-          </p>
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-xs font-semibold text-muted-foreground">
+              Selecione as UPAs participantes ({selecionadas.length}/{upas.length})
+            </span>
+            <button
+              type="button"
+              onClick={() =>
+                setUpaIdsRaw(selecionadas.length === upas.length ? "" : upas.map((u) => u.id).join(","))
+              }
+              className="text-[10px] font-semibold text-primary hover:underline"
+            >
+              {selecionadas.length === upas.length ? "Limpar" : "Selecionar todas"}
+            </button>
+          </div>
+          <ul className="max-h-56 space-y-1 overflow-y-auto rounded-lg border border-border bg-background p-2">
+            {upas.map((u) => {
+              const checked = selecionadas.includes(u.id);
+              return (
+                <li key={u.id}>
+                  <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => {
+                        const next = checked
+                          ? selecionadas.filter((id) => id !== u.id)
+                          : [...selecionadas, u.id];
+                        setUpaIdsRaw(next.join(","));
+                      }}
+                      className="h-4 w-4 accent-primary"
+                    />
+                    <span className="min-w-0 flex-1 truncate text-sm">{u.nome}</span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        navigator.clipboard?.writeText(u.id);
+                        toast.success(`ID copiado: ${u.id}`);
+                      }}
+                      className="flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                      title="Copiar ID"
+                    >
+                      {u.id} <Copy className="h-2.5 w-2.5" />
+                    </button>
+                  </label>
+                </li>
+              );
+            })}
+          </ul>
         </div>
 
         <div>
