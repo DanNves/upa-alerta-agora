@@ -244,7 +244,10 @@ function CriarCampanhas() {
   const [upaIdsRaw, setUpaIdsRaw] = useState("");
   const [icone, setIcone] = useState("💉");
 
-  const idsValidos = useMemo(() => upas.map((u) => u.id).join(", "), [upas]);
+  const selecionadas = useMemo(
+    () => upaIdsRaw.split(",").map((s) => s.trim()).filter(Boolean),
+    [upaIdsRaw],
+  );
 
   function lancar() {
     const t = titulo.trim();
