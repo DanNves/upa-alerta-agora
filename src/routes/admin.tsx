@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { Wrench, Megaphone, MessageSquare, Save, Trash2, Plus, Star, ShieldAlert } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Wrench, Megaphone, MessageSquare, Save, Trash2, Plus, Star, ShieldAlert, Lock, LogOut, Copy, User as UserIcon } from "lucide-react";
 import { useStore } from "@/data/store";
 import { BottomNav } from "@/components/BottomNav";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -13,8 +13,23 @@ export const Route = createFileRoute("/admin")({
 
 type Tab = "upas" | "campanhas" | "feedbacks";
 
+// Credenciais demo do painel gestor (protótipo TCC)
+const GESTORES: Record<string, { senha: string; nome: string }> = {
+  gestor: { senha: "upa2026", nome: "Gestor Municipal" },
+  sms: { senha: "salvador", nome: "Sec. Mun. de Saúde" },
+};
+const SESSION_KEY = "upafacil:admin:user";
+
 function AdminScreen() {
   const [tab, setTab] = useState<Tab>("upas");
+  const [user, setUser] = useState<string | null>(null);
+
+  useEffect(() => {
+    const stored = typeof window !== "undefined" ? sessionStorage.getItem(SESSION_KEY) : null;
+    if (stored) setUser(stored);
+  }, []);
+
+  if (!user) return <LoginScreen onLogin={(u) => { sessionStorage.setItem(SESSION_KEY, u); setUser(u); }} />;
 
   return (
     <main className="min-h-dvh bg-background pb-24">
