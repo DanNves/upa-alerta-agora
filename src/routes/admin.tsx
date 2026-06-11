@@ -482,3 +482,82 @@ function Feedbacks() {
     </div>
   );
 }
+
+/* ------------------------- Login ------------------------- */
+
+function LoginScreen({ onLogin }: { onLogin: (u: string) => void }) {
+  const [usuario, setUsuario] = useState("");
+  const [senha, setSenha] = useState("");
+  const [erro, setErro] = useState("");
+
+  function entrar(e: React.FormEvent) {
+    e.preventDefault();
+    const u = usuario.trim().toLowerCase();
+    const g = GESTORES[u];
+    if (!g || g.senha !== senha) {
+      setErro("Usuário ou senha incorretos.");
+      return;
+    }
+    toast.success(`Bem-vindo, ${g.nome}`);
+    onLogin(u);
+  }
+
+  return (
+    <main className="flex min-h-dvh items-center justify-center bg-gradient-to-br from-[#0b1530] via-[#0f1e44] to-[#11265a] px-4">
+      <form
+        onSubmit={entrar}
+        className="w-full max-w-sm space-y-4 rounded-3xl bg-white/95 p-6 shadow-2xl backdrop-blur"
+      >
+        <div className="flex flex-col items-center text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0b1530] text-amber-300">
+            <Lock className="h-6 w-6" />
+          </div>
+          <h1 className="mt-3 text-lg font-bold text-[#0b1530]">Painel Gestor UPA Fácil</h1>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Acesso restrito a gestores autorizados da Prefeitura de Salvador.
+          </p>
+        </div>
+
+        <label className="block">
+          <span className="text-xs font-semibold text-muted-foreground">Usuário</span>
+          <input
+            autoFocus
+            value={usuario}
+            onChange={(e) => { setUsuario(e.target.value); setErro(""); }}
+            placeholder="ex: gestor"
+            className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm focus:border-primary focus:outline-none"
+          />
+        </label>
+        <label className="block">
+          <span className="text-xs font-semibold text-muted-foreground">Senha</span>
+          <input
+            type="password"
+            value={senha}
+            onChange={(e) => { setSenha(e.target.value); setErro(""); }}
+            placeholder="••••••••"
+            className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm focus:border-primary focus:outline-none"
+          />
+        </label>
+
+        {erro && (
+          <div className="rounded-lg bg-destructive/10 px-3 py-2 text-xs font-medium text-[color:var(--danger)]">
+            {erro}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#0b1530] py-3 text-sm font-semibold text-white transition hover:bg-[#11265a]"
+        >
+          <Lock className="h-4 w-4" /> Entrar no Painel
+        </button>
+
+        <div className="rounded-lg border border-dashed border-border bg-muted/40 p-3 text-[10px] leading-relaxed text-muted-foreground">
+          <strong className="text-foreground">Credenciais de demonstração (TCC):</strong>
+          <div className="mt-1 font-mono">gestor / upa2026</div>
+          <div className="font-mono">sms / salvador</div>
+        </div>
+      </form>
+    </main>
+  );
+}
