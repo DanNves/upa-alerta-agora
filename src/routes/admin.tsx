@@ -29,7 +29,7 @@ function AdminScreen() {
     if (stored) setUser(stored);
   }, []);
 
-  if (!user) return <LoginScreen onLogin={(u) => { sessionStorage.setItem(SESSION_KEY, u); setUser(u); }} />;
+  if (!user) return <LoginScreen onLogin={(u: string) => { sessionStorage.setItem(SESSION_KEY, u); setUser(u); }} />;
 
   return (
     <main className="min-h-dvh bg-background pb-24">
