@@ -44,9 +44,20 @@ function AdminScreen() {
                 Protótipo Administrativo da Prefeitura de Salvador
               </p>
             </div>
-            <span className="rounded-full bg-primary px-3 py-1 text-[10px] font-bold tracking-wide">
-              DEV MODE
-            </span>
+            <div className="flex flex-col items-end gap-1">
+              <span className="rounded-full bg-primary px-3 py-1 text-[10px] font-bold tracking-wide">
+                DEV MODE
+              </span>
+              <button
+                onClick={() => { sessionStorage.removeItem(SESSION_KEY); setUser(null); }}
+                className="flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-medium text-white/90 hover:bg-white/20"
+              >
+                <LogOut className="h-3 w-3" /> Sair
+              </button>
+            </div>
+          </div>
+          <div className="mt-2 flex items-center gap-1.5 text-[11px] text-white/70">
+            <UserIcon className="h-3 w-3" /> Conectado como <span className="font-semibold text-white">{GESTORES[user]?.nome ?? user}</span>
           </div>
 
           <div className="mt-5 grid grid-cols-3 gap-1 rounded-2xl bg-white/10 p-1 backdrop-blur">
