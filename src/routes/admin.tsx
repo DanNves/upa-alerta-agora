@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { Wrench, Megaphone, MessageSquare, Save, Trash2, Plus, Star, ShieldAlert } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Wrench, Megaphone, MessageSquare, Save, Trash2, Plus, Star, ShieldAlert, Lock, LogOut, Copy, User as UserIcon } from "lucide-react";
 import { useStore } from "@/data/store";
 import { BottomNav } from "@/components/BottomNav";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -13,8 +13,23 @@ export const Route = createFileRoute("/admin")({
 
 type Tab = "upas" | "campanhas" | "feedbacks";
 
+// Credenciais demo do painel gestor (protótipo TCC)
+const GESTORES: Record<string, { senha: string; nome: string }> = {
+  gestor: { senha: "upa2026", nome: "Gestor Municipal" },
+  sms: { senha: "salvador", nome: "Sec. Mun. de Saúde" },
+};
+const SESSION_KEY = "upafacil:admin:user";
+
 function AdminScreen() {
   const [tab, setTab] = useState<Tab>("upas");
+  const [user, setUser] = useState<string | null>(null);
+
+  useEffect(() => {
+    const stored = typeof window !== "undefined" ? sessionStorage.getItem(SESSION_KEY) : null;
+    if (stored) setUser(stored);
+  }, []);
+
+  if (!user) return <LoginScreen onLogin={(u: string) => { sessionStorage.setItem(SESSION_KEY, u); setUser(u); }} />;
 
   return (
     <main className="min-h-dvh bg-background pb-24">
@@ -29,9 +44,20 @@ function AdminScreen() {
                 Protótipo Administrativo da Prefeitura de Salvador
               </p>
             </div>
-            <span className="rounded-full bg-primary px-3 py-1 text-[10px] font-bold tracking-wide">
-              DEV MODE
-            </span>
+            <div className="flex flex-col items-end gap-1">
+              <span className="rounded-full bg-primary px-3 py-1 text-[10px] font-bold tracking-wide">
+                DEV MODE
+              </span>
+              <button
+                onClick={() => { sessionStorage.removeItem(SESSION_KEY); setUser(null); }}
+                className="flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-medium text-white/90 hover:bg-white/20"
+              >
+                <LogOut className="h-3 w-3" /> Sair
+              </button>
+            </div>
+          </div>
+          <div className="mt-2 flex items-center gap-1.5 text-[11px] text-white/70">
+            <UserIcon className="h-3 w-3" /> Conectado como <span className="font-semibold text-white">{GESTORES[user]?.nome ?? user}</span>
           </div>
 
           <div className="mt-5 grid grid-cols-3 gap-1 rounded-2xl bg-white/10 p-1 backdrop-blur">
@@ -218,7 +244,10 @@ function CriarCampanhas() {
   const [upaIdsRaw, setUpaIdsRaw] = useState("");
   const [icone, setIcone] = useState("💉");
 
-  const idsValidos = useMemo(() => upas.map((u) => u.id).join(", "), [upas]);
+  const selecionadas = useMemo(
+    () => upaIdsRaw.split(",").map((s) => s.trim()).filter(Boolean),
+    [upaIdsRaw],
+  );
 
   function lancar() {
     const t = titulo.trim();
@@ -273,15 +302,55 @@ function CriarCampanhas() {
           className="w-full resize-none rounded-lg border border-border bg-background px-3 py-3 text-sm focus:border-primary focus:outline-none"
         />
         <div>
-          <input
-            value={upaIdsRaw}
-            onChange={(e) => setUpaIdsRaw(e.target.value)}
-            placeholder="IDs das UPAs (separado por vírgula)"
-            className="w-full rounded-lg border border-border bg-background px-3 py-3 text-sm focus:border-primary focus:outline-none"
-          />
-          <p className="mt-1 text-[10px] text-muted-foreground">
-            IDs válidos: {idsValidos}
-          </p>
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-xs font-semibold text-muted-foreground">
+              Selecione as UPAs participantes ({selecionadas.length}/{upas.length})
+            </span>
+            <button
+              type="button"
+              onClick={() =>
+                setUpaIdsRaw(selecionadas.length === upas.length ? "" : upas.map((u) => u.id).join(","))
+              }
+              className="text-[10px] font-semibold text-primary hover:underline"
+            >
+              {selecionadas.length === upas.length ? "Limpar" : "Selecionar todas"}
+            </button>
+          </div>
+          <ul className="max-h-56 space-y-1 overflow-y-auto rounded-lg border border-border bg-background p-2">
+            {upas.map((u) => {
+              const checked = selecionadas.includes(u.id);
+              return (
+                <li key={u.id}>
+                  <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => {
+                        const next = checked
+                          ? selecionadas.filter((id) => id !== u.id)
+                          : [...selecionadas, u.id];
+                        setUpaIdsRaw(next.join(","));
+                      }}
+                      className="h-4 w-4 accent-primary"
+                    />
+                    <span className="min-w-0 flex-1 truncate text-sm">{u.nome}</span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        navigator.clipboard?.writeText(u.id);
+                        toast.success(`ID copiado: ${u.id}`);
+                      }}
+                      className="flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                      title="Copiar ID"
+                    >
+                      {u.id} <Copy className="h-2.5 w-2.5" />
+                    </button>
+                  </label>
+                </li>
+              );
+            })}
+          </ul>
         </div>
 
         <div>
@@ -411,5 +480,84 @@ function Feedbacks() {
         )}
       </ul>
     </div>
+  );
+}
+
+/* ------------------------- Login ------------------------- */
+
+function LoginScreen({ onLogin }: { onLogin: (u: string) => void }) {
+  const [usuario, setUsuario] = useState("");
+  const [senha, setSenha] = useState("");
+  const [erro, setErro] = useState("");
+
+  function entrar(e: React.FormEvent) {
+    e.preventDefault();
+    const u = usuario.trim().toLowerCase();
+    const g = GESTORES[u];
+    if (!g || g.senha !== senha) {
+      setErro("Usuário ou senha incorretos.");
+      return;
+    }
+    toast.success(`Bem-vindo, ${g.nome}`);
+    onLogin(u);
+  }
+
+  return (
+    <main className="flex min-h-dvh items-center justify-center bg-gradient-to-br from-[#0b1530] via-[#0f1e44] to-[#11265a] px-4">
+      <form
+        onSubmit={entrar}
+        className="w-full max-w-sm space-y-4 rounded-3xl bg-white/95 p-6 shadow-2xl backdrop-blur"
+      >
+        <div className="flex flex-col items-center text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0b1530] text-amber-300">
+            <Lock className="h-6 w-6" />
+          </div>
+          <h1 className="mt-3 text-lg font-bold text-[#0b1530]">Painel Gestor UPA Fácil</h1>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Acesso restrito a gestores autorizados da Prefeitura de Salvador.
+          </p>
+        </div>
+
+        <label className="block">
+          <span className="text-xs font-semibold text-muted-foreground">Usuário</span>
+          <input
+            autoFocus
+            value={usuario}
+            onChange={(e) => { setUsuario(e.target.value); setErro(""); }}
+            placeholder="ex: gestor"
+            className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm focus:border-primary focus:outline-none"
+          />
+        </label>
+        <label className="block">
+          <span className="text-xs font-semibold text-muted-foreground">Senha</span>
+          <input
+            type="password"
+            value={senha}
+            onChange={(e) => { setSenha(e.target.value); setErro(""); }}
+            placeholder="••••••••"
+            className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm focus:border-primary focus:outline-none"
+          />
+        </label>
+
+        {erro && (
+          <div className="rounded-lg bg-destructive/10 px-3 py-2 text-xs font-medium text-[color:var(--danger)]">
+            {erro}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#0b1530] py-3 text-sm font-semibold text-white transition hover:bg-[#11265a]"
+        >
+          <Lock className="h-4 w-4" /> Entrar no Painel
+        </button>
+
+        <div className="rounded-lg border border-dashed border-border bg-muted/40 p-3 text-[10px] leading-relaxed text-muted-foreground">
+          <strong className="text-foreground">Credenciais de demonstração (TCC):</strong>
+          <div className="mt-1 font-mono">gestor / upa2026</div>
+          <div className="font-mono">sms / salvador</div>
+        </div>
+      </form>
+    </main>
   );
 }
