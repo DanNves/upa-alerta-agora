@@ -35,8 +35,12 @@ export type UPA = {
   referencia: string;
   servicos: Servico[];
   atualizado_em: string; // ISO
+  /** Origem do dado de ocupação (RN09). Ausente = "simulada". */
+  fonte_dados?: OrigemDado;
+  foto?: string;
   avaliacoes: { nota: number; tempo_real_min: number; comentario: string; criado_em: string }[];
   historico: { hora: string; ocupacao: number }[]; // últimas 12h
+
 };
 
 export type Evento = {
