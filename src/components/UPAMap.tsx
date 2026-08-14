@@ -8,16 +8,20 @@ function buildPin(upa: UPA) {
   const s = getStatus(upa.ocupacao_atual, upa.capacidade_max);
   return L.divIcon({
     className: "upa-pin",
-    iconSize: [60, 56],
-    iconAnchor: [30, 56],
+    iconSize: [72, 62],
+    iconAnchor: [36, 62],
     html: `
       <div class="upa-pin-inner">
-        <div class="upa-pin-bubble" style="background:${s.cor}">${s.pct}%</div>
+        <div class="upa-pin-bubble" style="background:${s.cor}">
+          <span style="font-size:11px;line-height:1.05;display:block">${upa.ocupacao_atual}/${upa.capacidade_max}</span>
+          <span style="font-size:10px;line-height:1.05;display:block;opacity:.95">${s.pct}%</span>
+        </div>
         <div class="upa-pin-tail" style="border-top-color:${s.cor}"></div>
       </div>
     `,
   });
 }
+
 
 function userIcon() {
   return L.divIcon({

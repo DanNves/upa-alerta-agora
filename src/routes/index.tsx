@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useState } from "react";
-import { Search, Crosshair, SlidersHorizontal, Siren, MapPin, Clock } from "lucide-react";
+import { Search, Crosshair, SlidersHorizontal, Siren, MapPin, Clock, Info } from "lucide-react";
 import { useStore } from "@/data/store";
 import { distanciaKm, melhorOpcao, getStatus } from "@/data/upas";
+import { AVISO_DADOS_SIMULADOS, AVISO_RECOMENDACAO, FEATURE_FLAGS, normalizarOcupacao } from "@/data/regras";
 import { UpaBottomSheet } from "@/components/UpaBottomSheet";
 import { FilterSheet } from "@/components/FilterSheet";
 import { EmergencyModal } from "@/components/EmergencyModal";
@@ -12,8 +13,24 @@ import { StatusBadge } from "@/components/StatusBadge";
 const UPAMap = lazy(() => import("@/components/UPAMap").then((m) => ({ default: m.UPAMap })));
 
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "UPA+ — Mapa de ocupação das UPAs de Salvador" },
+      {
+        name: "description",
+        content:
+          "Veja no mapa a ocupação atual, capacidade e distância das UPAs de Salvador. Protótipo acadêmico com dados de demonstração.",
+      },
+      { property: "og:title", content: "UPA+ — Mapa de ocupação das UPAs de Salvador" },
+      {
+        property: "og:description",
+        content: "Ocupação, capacidade, serviços e rota das UPAs de Salvador em um só mapa.",
+      },
+    ],
+  }),
   component: MapScreen,
 });
+
 
 function MapScreen() {
   const upas = useStore((s) => s.upas);

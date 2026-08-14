@@ -1,4 +1,13 @@
+import {
+  nivelOcupacao,
+  percentualOcupacao,
+  scoreRecomendacao,
+  type NivelOcupacao,
+  type OrigemDado,
+} from "./regras";
+
 export type Servico =
+
   | "Clínico Geral"
   | "Pediatria"
   | "Vacinação"
@@ -26,8 +35,12 @@ export type UPA = {
   referencia: string;
   servicos: Servico[];
   atualizado_em: string; // ISO
+  /** Origem do dado de ocupação (RN09). Ausente = "simulada". */
+  fonte_dados?: OrigemDado;
+  foto?: string;
   avaliacoes: { nota: number; tempo_real_min: number; comentario: string; criado_em: string }[];
   historico: { hora: string; ocupacao: number }[]; // últimas 12h
+
 };
 
 export type Evento = {
@@ -365,12 +378,22 @@ export type Status = {
   token: "success" | "warning" | "danger" | "emergency";
 };
 
+const STATUS_MAP: Record<NivelOcupacao, Omit<Status, "pct">> = {
+  baixa: { label: "Baixa", cor: "#22C55E", bg: "#22C55E", emoji: "🟢", token: "success" },
+  moderada: { label: "Moderada", cor: "#F59E0B", bg: "#F59E0B", emoji: "🟡", token: "warning" },
+  alta: { label: "Alta", cor: "#EF4444", bg: "#EF4444", emoji: "🔴", token: "danger" },
+  superlotada: { label: "Superlotada", cor: "#7C3AED", bg: "#7C3AED", emoji: "🟣", token: "emergency" },
+};
+
+/** Indicador visual derivado das regras centralizadas (src/data/regras.ts). */
 export function getStatus(ocupacao: number, capacidade: number): Status {
-  const pct = Math.round((ocupacao / capacidade) * 100);
-  if (pct <= 50) return { label: "Baixa", cor: "#22C55E", bg: "#22C55E", emoji: "🟢", pct, token: "success" };
-  if (pct <= 79) return { label: "Moderada", cor: "#F59E0B", bg: "#F59E0B", emoji: "🟡", pct, token: "warning" };
-  if (pct <= 100) return { label: "Alta", cor: "#EF4444", bg: "#EF4444", emoji: "🔴", pct, token: "danger" };
-  return { label: "Superlotada", cor: "#7C3AED", bg: "#7C3AED", emoji: "🟣", pct, token: "emergency" };
+  const pct = percentualOcupacao(ocupacao, capacidade);
+  return { ...STATUS_MAP[nivelOcupacao(pct)], pct };
+}
+
+/** Origem do dado de ocupação (RN09). Protótipo: manual ou simulada. */
+export function origemDado(upa: UPA): OrigemDado {
+  return upa.fonte_dados ?? "simulada";
 }
 
 // Haversine
@@ -384,17 +407,21 @@ export function distanciaKm(a: { lat: number; lng: number }, b: { lat: number; l
   return 2 * R * Math.asin(Math.sqrt(x));
 }
 
+/**
+ * "Opção mais adequada agora" — recomendação computacional (RN06/RN14).
+ * Não é recomendação médica e não garante atendimento mais rápido.
+ */
 export function melhorOpcao(upas: UPA[], loc: { lat: number; lng: number }) {
   return upas
     .filter((u) => u.aberta)
     .map((u) => {
       const d = distanciaKm(loc, { lat: u.latitude, lng: u.longitude });
-      const pct = (u.ocupacao_atual / u.capacidade_max) * 100;
-      const score = pct * 0.6 + d * 10 * 0.4;
-      return { upa: u, distancia: d, pct, score };
+      const pct = percentualOcupacao(u.ocupacao_atual, u.capacidade_max);
+      return { upa: u, distancia: d, pct, score: scoreRecomendacao(pct, d) };
     })
     .sort((a, b) => a.score - b.score)[0];
 }
+
 
 export function tempoAtras(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();

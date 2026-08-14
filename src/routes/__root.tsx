@@ -73,11 +73,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "UPA Fácil — UPAs em tempo real" },
-      { name: "description", content: "Encontre a UPA mais rápida agora: ocupação, tempo de espera e rota direta no Google Maps." },
-      { name: "author", content: "UPA Fácil" },
-      { property: "og:title", content: "UPA Fácil — UPAs em tempo real" },
-      { property: "og:description", content: "Encontre a UPA mais rápida agora: ocupação, tempo de espera e rota direta no Google Maps." },
+      { title: "UPA+ — Informações das UPAs de Salvador" },
+      { name: "description", content: "Consulte ocupação, capacidade, serviços, endereço e rota das UPAs de Salvador. Protótipo acadêmico com dados de demonstração." },
+      { name: "author", content: "UPA+" },
+      { property: "og:title", content: "UPA+ — Informações das UPAs de Salvador" },
+      { property: "og:description", content: "Consulte ocupação, capacidade, serviços, endereço e rota das UPAs de Salvador. Protótipo acadêmico com dados de demonstração." },
+
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
