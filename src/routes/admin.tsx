@@ -38,7 +38,7 @@ function AdminScreen() {
           <div className="flex items-start justify-between gap-3">
             <div>
               <h1 className="flex items-center gap-2 text-xl font-bold">
-                <Wrench className="h-5 w-5 text-amber-300" /> Painel Gestor UPA Fácil
+                <Wrench className="h-5 w-5 text-amber-300" /> Painel Gestor UPA+
               </h1>
               <p className="mt-1 text-xs text-white/70">
                 Protótipo Administrativo da Prefeitura de Salvador
@@ -502,7 +502,7 @@ function LoginScreen({ onLogin }: { onLogin: (u: string) => void }) {
       <header className="bg-gradient-to-br from-[#0b1530] via-[#0f1e44] to-[#11265a] px-4 pb-5 pt-6 text-white">
         <div className="mx-auto max-w-md">
           <h1 className="flex items-center gap-2 text-xl font-bold">
-            <Wrench className="h-5 w-5 text-amber-300" /> Painel Gestor UPA Fácil
+            <Wrench className="h-5 w-5 text-amber-300" /> Painel Gestor UPA+
           </h1>
           <p className="mt-1 text-xs text-white/70">
             Área restrita — faça login para gerenciar UPAs e campanhas.
