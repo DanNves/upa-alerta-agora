@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { MapPin, Clock, Navigation, X, RefreshCw } from "lucide-react";
-import { StatusBadge } from "./StatusBadge";
-import { distanciaKm, mapsUrl, tempoAtras, type UPA } from "@/data/upas";
+import { OcupacaoInfo } from "./OcupacaoInfo";
+import { distanciaKm, mapsUrl, origemDado, tempoAtras, type UPA } from "@/data/upas";
+import { ORIGEM_LABEL } from "@/data/regras";
 import { useStore } from "@/data/store";
+
 
 export function UpaBottomSheet({ upa, onClose }: { upa: UPA; onClose: () => void }) {
   const userLoc = useStore((s) => s.userLoc);
@@ -37,14 +39,15 @@ export function UpaBottomSheet({ upa, onClose }: { upa: UPA; onClose: () => void
           </button>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-          <StatusBadge ocupacao={upa.ocupacao_atual} capacidade={upa.capacidade_max} />
+        <div className="mt-4 rounded-2xl bg-muted px-3 py-3">
+          <OcupacaoInfo upa={upa} showAtualizacao={false} />
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
           <span className="inline-flex items-center gap-1 text-foreground">
-            <Clock className="h-4 w-4 text-muted-foreground" /> ~{upa.tempo_estimado} min
+            <Clock className="h-4 w-4 text-muted-foreground" /> ~{upa.tempo_estimado} min estimados
           </span>
-          <span className="text-muted-foreground">
-            {upa.ocupacao_atual}/{upa.capacidade_max} pessoas
-          </span>
+          <span className="text-muted-foreground">📍 {dist.toFixed(1)} km</span>
           <span className={upa.aberta ? "text-success font-medium" : "text-danger font-medium"}>
             {upa.aberta ? "Aberta agora" : "Fechada"}
           </span>
@@ -58,8 +61,9 @@ export function UpaBottomSheet({ upa, onClose }: { upa: UPA; onClose: () => void
 
         <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
           <RefreshCw className="h-3 w-3" />
-          <span>📍 {dist.toFixed(1)} km · Atualizado {tempoAtras(upa.atualizado_em)}</span>
+          <span>Atualizado {tempoAtras(upa.atualizado_em)} · {ORIGEM_LABEL[origemDado(upa)]}</span>
         </div>
+
 
         <div className="mt-4 grid grid-cols-2 gap-2">
           <Link

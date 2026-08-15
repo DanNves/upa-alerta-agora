@@ -45,19 +45,20 @@ function MapScreen() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  // Atualiza localização e ocupações em tempo real (simulação)
+  // Atualização SIMULADA da ocupação (demonstração acadêmica — não é tempo real).
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted || !FEATURE_FLAGS.simulacaoOcupacao) return;
     const t = setInterval(() => {
       const st = useStore.getState();
       st.upas.forEach((u) => {
         const delta = Math.round((Math.random() - 0.5) * 6);
-        const nova = Math.max(0, Math.min(u.capacidade_max + 20, u.ocupacao_atual + delta));
+        const nova = normalizarOcupacao(Math.min(u.capacidade_max + 20, u.ocupacao_atual + delta));
         if (nova !== u.ocupacao_atual) st.updateUpa(u.id, { ocupacao_atual: nova });
       });
     }, 20000);
     return () => clearInterval(t);
   }, [mounted]);
+
 
   const melhor = melhorOpcao(upas, userLoc);
   const distMelhor = melhor ? distanciaKm(userLoc, { lat: melhor.upa.latitude, lng: melhor.upa.longitude }) : 0;
@@ -108,28 +109,40 @@ function MapScreen() {
           </label>
         </div>
 
+        <div className="pointer-events-auto mx-auto flex w-full max-w-md items-center gap-1.5 rounded-full bg-card/95 px-3 py-1.5 text-[11px] text-muted-foreground shadow-sm backdrop-blur">
+          <Info className="h-3 w-3 shrink-0" />
+          <span className="truncate">{AVISO_DADOS_SIMULADOS}</span>
+        </div>
+
         {melhor && (
           <button
             onClick={() => setSelected(melhor.upa.id)}
-            className="pointer-events-auto mx-auto flex w-full max-w-md items-center gap-3 rounded-2xl bg-primary px-4 py-3 text-left text-primary-foreground shadow-[var(--shadow-card)] transition hover:opacity-95"
+            className="pointer-events-auto mx-auto w-full max-w-md rounded-2xl bg-primary px-4 py-3 text-left text-primary-foreground shadow-[var(--shadow-card)] transition hover:opacity-95"
           >
-            <span className="text-xl">📍</span>
-            <div className="min-w-0 flex-1">
-              <div className="text-[11px] uppercase tracking-wider opacity-80">Melhor opção agora</div>
-              <div className="truncate text-sm font-bold">{melhor.upa.nome}</div>
+            <div className="flex items-center gap-3">
+              <span className="text-xl">📍</span>
+              <div className="min-w-0 flex-1">
+                <div className="text-[11px] uppercase tracking-wider opacity-80">
+                  Opção mais adequada agora
+                </div>
+                <div className="truncate text-sm font-bold">{melhor.upa.nome}</div>
+              </div>
+              <div className="flex shrink-0 flex-col items-end gap-0.5 text-xs font-semibold">
+                <span
+                  className="rounded-full px-2 py-0.5"
+                  style={{ backgroundColor: getStatus(melhor.upa.ocupacao_atual, melhor.upa.capacidade_max).cor }}
+                >
+                  {melhor.upa.ocupacao_atual}/{melhor.upa.capacidade_max} · {melhor.pct}%
+                </span>
+                <span className="opacity-90">
+                  {melhor.upa.tempo_estimado} min · {distMelhor.toFixed(1)} km
+                </span>
+              </div>
             </div>
-            <div className="flex shrink-0 items-center gap-2 text-xs font-semibold">
-              <span
-                className="rounded-full px-2 py-0.5"
-                style={{ backgroundColor: getStatus(melhor.upa.ocupacao_atual, melhor.upa.capacidade_max).cor }}
-              >
-                {Math.round(melhor.pct)}%
-              </span>
-              <span className="opacity-90">{melhor.upa.tempo_estimado} min</span>
-              <span className="opacity-90">{distMelhor.toFixed(1)} km</span>
-            </div>
+            <p className="mt-1.5 text-[10px] leading-snug opacity-80">{AVISO_RECOMENDACAO}</p>
           </button>
         )}
+
 
         {/* Search results dropdown */}
         {query.trim() && (
@@ -153,8 +166,12 @@ function MapScreen() {
                           <MapPin className="h-3 w-3" /> {u.bairro}
                           <Clock className="ml-2 h-3 w-3" /> ~{u.tempo_estimado} min
                         </div>
+                        <div className="mt-0.5 text-xs font-medium text-foreground">
+                          {u.ocupacao_atual} / {u.capacidade_max} pessoas
+                        </div>
                       </div>
                       <StatusBadge ocupacao={u.ocupacao_atual} capacidade={u.capacidade_max} size="sm" />
+
                     </button>
                   </li>
                 ))}

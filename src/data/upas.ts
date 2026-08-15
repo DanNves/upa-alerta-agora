@@ -51,7 +51,17 @@ export type Evento = {
   data_fim: string;
   upa_ids: string[];
   icone: string; // emoji
+  horario?: string;
+  informacoes?: string;
 };
+
+/** Status do evento derivado das datas (RN10). */
+export function statusEvento(ev: Evento): "Programado" | "Em andamento" | "Encerrado" {
+  const hoje = new Date().toISOString().slice(0, 10);
+  if (hoje < ev.data_inicio) return "Programado";
+  if (hoje > ev.data_fim) return "Encerrado";
+  return "Em andamento";
+}
 
 const horas12 = () =>
   Array.from({ length: 12 }, (_, i) => {

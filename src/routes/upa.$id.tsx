@@ -1,13 +1,30 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowLeft, Phone, Copy, Navigation, Car, MapPin, Clock, Star } from "lucide-react";
+import { ArrowLeft, Phone, Copy, Navigation, Car, MapPin, Clock, Star, Share2 } from "lucide-react";
 import { useState } from "react";
 import { useStore } from "@/data/store";
-import { distanciaKm, getStatus, mapsUrl, tempoAtras, uberUrl } from "@/data/upas";
+import { distanciaKm, getStatus, mapsUrl, origemDado, tempoAtras, uberUrl } from "@/data/upas";
+import { ORIGEM_LABEL, dataHoraCompleta } from "@/data/regras";
 import { StatusBadge } from "@/components/StatusBadge";
 import { BottomNav } from "@/components/BottomNav";
 
 export const Route = createFileRoute("/upa/$id")({
   component: UpaDetail,
+  head: () => ({
+    meta: [
+      { title: "Detalhes da UPA — ocupação e serviços | UPA+" },
+      {
+        name: "description",
+        content:
+          "Ocupação atual, capacidade, serviços, endereço, CEP, telefone e rota da unidade. Dados de demonstração acadêmica.",
+      },
+      { property: "og:title", content: "Detalhes da UPA — UPA+" },
+      {
+        property: "og:description",
+        content: "Ocupação, serviços, endereço e rota da unidade de pronto atendimento.",
+      },
+    ],
+  }),
+
   notFoundComponent: () => (
     <div className="p-8 text-center">
       <p className="text-muted-foreground">UPA não encontrada.</p>
@@ -21,6 +38,7 @@ export const Route = createFileRoute("/upa/$id")({
     return { upa };
   },
 });
+
 
 const servicoIcon: Record<string, string> = {
   "Clínico Geral": "🩺",
@@ -96,15 +114,22 @@ function UpaDetail() {
         <section className="rounded-3xl border border-border bg-card p-5">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-3xl font-bold" style={{ color: status.cor }}>
-                {status.pct}%
-              </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-2xl font-bold text-foreground">
                 {upa.ocupacao_atual} / {upa.capacidade_max} pessoas
+              </div>
+              <div className="text-lg font-semibold" style={{ color: status.cor }}>
+                {status.pct}% de ocupação
               </div>
             </div>
             <StatusBadge ocupacao={upa.ocupacao_atual} capacidade={upa.capacidade_max} size="lg" />
           </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Atualizado {tempoAtras(upa.atualizado_em)} · Última atualização:{" "}
+            {dataHoraCompleta(upa.atualizado_em)}
+            <br />
+            Origem: {ORIGEM_LABEL[origemDado(upa)]}
+          </p>
+
           <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
             <div className="rounded-2xl bg-muted px-3 py-3">
               <div className="flex items-center gap-1.5 text-muted-foreground">
@@ -192,7 +217,26 @@ function UpaDetail() {
           >
             <Copy className="h-4 w-4" /> Copiar endereço completo
           </button>
+          <button
+            onClick={async () => {
+              const url = mapsUrl(upa.latitude, upa.longitude);
+              const texto = `${upa.nome} — ${upa.endereco}, ${upa.bairro}, ${upa.cidade}/${upa.estado} (CEP ${upa.cep})`;
+              if (typeof navigator !== "undefined" && "share" in navigator) {
+                try {
+                  await navigator.share({ title: upa.nome, text: texto, url });
+                  return;
+                } catch {
+                  /* usuário cancelou — segue para cópia */
+                }
+              }
+              copiar(`${texto}\n${url}`, "Localização");
+            }}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-secondary py-3 font-semibold text-secondary-foreground hover:bg-accent"
+          >
+            <Share2 className="h-4 w-4" /> Compartilhar localização
+          </button>
         </section>
+
 
         {/* Histórico */}
         <section className="rounded-3xl border border-border bg-card p-5">

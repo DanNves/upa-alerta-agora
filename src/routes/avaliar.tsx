@@ -12,8 +12,24 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/avaliar")({
   validateSearch: zodValidator(searchSchema),
+  head: () => ({
+    meta: [
+      { title: "Avaliar atendimento na UPA | UPA+" },
+      {
+        name: "description",
+        content:
+          "Registre sua nota, o tempo real de espera e um comentário sobre o atendimento recebido na UPA.",
+      },
+      { property: "og:title", content: "Avaliar atendimento | UPA+" },
+      {
+        property: "og:description",
+        content: "Compartilhe nota, tempo de espera e comentário sobre o atendimento na UPA.",
+      },
+    ],
+  }),
   component: AvaliarScreen,
 });
+
 
 function AvaliarScreen() {
   const upas = useStore((s) => s.upas);
