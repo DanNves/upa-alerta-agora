@@ -156,6 +156,11 @@ function BuscarScreen() {
                   <div className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
                     <MapPin className="h-3 w-3" /> {upa.bairro} · {dist.toFixed(1)} km
                   </div>
+                  <div className="mt-1 text-xs font-semibold text-foreground">
+                    {upa.ocupacao_atual} / {upa.capacidade_max} pessoas ·{" "}
+                    {percentualOcupacao(upa.ocupacao_atual, upa.capacidade_max)}%
+                  </div>
+
                 </div>
                 <StatusBadge ocupacao={upa.ocupacao_atual} capacidade={upa.capacidade_max} size="sm" />
               </div>
