@@ -49,6 +49,7 @@ function BuscarScreen() {
   const upas = useStore((s) => s.upas);
   const userLoc = useStore((s) => s.userLoc);
   const [selected, setSelected] = useState<string[]>([]);
+  const [termo, setTermo] = useState("");
 
   const required = useMemo(() => {
     const set = new Set<Servico>();
@@ -57,17 +58,25 @@ function BuscarScreen() {
   }, [selected]);
 
   const resultados = useMemo(() => {
-    const list = upas
+    const q = termo.trim().toLowerCase();
+    return upas
       .filter((u) => u.aberta)
       .filter((u) => (required.length ? required.some((s) => u.servicos.includes(s)) : true))
+      .filter((u) =>
+        q
+          ? u.nome.toLowerCase().includes(q) ||
+            u.bairro.toLowerCase().includes(q) ||
+            u.cidade.toLowerCase().includes(q) ||
+            u.servicos.some((s) => s.toLowerCase().includes(q))
+          : true,
+      )
       .map((u) => {
         const dist = distanciaKm(userLoc, { lat: u.latitude, lng: u.longitude });
-        const pct = (u.ocupacao_atual / u.capacidade_max) * 100;
-        return { upa: u, dist, score: pct * 0.6 + dist * 10 * 0.4 };
+        const pct = percentualOcupacao(u.ocupacao_atual, u.capacidade_max);
+        return { upa: u, dist, score: scoreRecomendacao(pct, dist) };
       })
       .sort((a, b) => a.score - b.score);
-    return list;
-  }, [upas, userLoc, required]);
+  }, [upas, userLoc, required, termo]);
 
   const toggle = (id: string) =>
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -76,10 +85,21 @@ function BuscarScreen() {
     <main className="min-h-dvh bg-background pb-24">
       <header className="bg-card px-4 pb-4 pt-6 shadow-sm">
         <div className="mx-auto max-w-md">
-          <h1 className="text-2xl font-bold">Do que você precisa?</h1>
+          <h1 className="text-2xl font-bold">Buscar UPA</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Selecione um ou mais cards para encontrar as UPAs ideais.
+            Pesquise por nome, bairro ou serviço, ou selecione o que você precisa.
           </p>
+
+          <label className="mt-3 flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2.5">
+            <Search className="h-4 w-4 text-muted-foreground" />
+            <input
+              value={termo}
+              onChange={(e) => setTermo(e.target.value)}
+              placeholder="Nome, bairro ou serviço"
+              aria-label="Buscar por nome, bairro ou serviço"
+              className="w-full bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none"
+            />
+          </label>
 
           <div className="mt-4 grid grid-cols-2 gap-2">
             {NECESSIDADES.map((n) => {
@@ -106,10 +126,14 @@ function BuscarScreen() {
       </header>
 
       <section className="mx-auto max-w-md px-4 pt-4">
+        <p className="mb-3 rounded-2xl bg-muted px-3 py-2 text-[11px] leading-snug text-muted-foreground">
+          {AVISO_RECOMENDACAO}
+        </p>
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-muted-foreground">
-            {selected.length ? `${resultados.length} UPAs recomendadas` : "Todas as UPAs · por melhor opção"}
+            {resultados.length} {resultados.length === 1 ? "UPA" : "UPAs"} · ordenadas pelos critérios disponíveis
           </h2>
+
           {selected.length > 0 && (
             <button onClick={() => setSelected([])} className="text-xs font-semibold text-primary">
               Limpar
