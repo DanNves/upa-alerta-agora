@@ -1,14 +1,31 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { MapPin, Clock, Navigation } from "lucide-react";
+import { MapPin, Clock, Navigation, Search } from "lucide-react";
 import { useStore } from "@/data/store";
 import { distanciaKm, mapsUrl, type Servico } from "@/data/upas";
+import { AVISO_RECOMENDACAO, percentualOcupacao, scoreRecomendacao } from "@/data/regras";
 import { StatusBadge } from "@/components/StatusBadge";
 import { BottomNav } from "@/components/BottomNav";
 
 export const Route = createFileRoute("/buscar")({
+  head: () => ({
+    meta: [
+      { title: "Buscar UPA por nome, bairro ou serviço | UPA+" },
+      {
+        name: "description",
+        content:
+          "Busque UPAs de Salvador por nome, bairro ou serviço e compare ocupação, capacidade e distância.",
+      },
+      { property: "og:title", content: "Buscar UPA | UPA+" },
+      {
+        property: "og:description",
+        content: "Encontre UPAs por nome, bairro ou serviço e compare ocupação e distância.",
+      },
+    ],
+  }),
   component: BuscarScreen,
 });
+
 
 type Necessidade = {
   id: string;
