@@ -9,23 +9,22 @@ import { BottomNav } from "@/components/BottomNav";
 
 export const Route = createFileRoute("/upa/$id")({
   component: UpaDetail,
-  head: ({ loaderData }) => {
-    const nome = loaderData?.upa?.nome ?? "UPA";
-    return {
-      meta: [
-        { title: `${nome} — ocupação e serviços | UPA+` },
-        {
-          name: "description",
-          content: `Ocupação atual, capacidade, serviços, endereço, CEP, telefone e rota da ${nome}. Dados de demonstração acadêmica.`,
-        },
-        { property: "og:title", content: `${nome} — UPA+` },
-        {
-          property: "og:description",
-          content: `Ocupação, serviços, endereço e rota da ${nome}.`,
-        },
-      ],
-    };
-  },
+  head: () => ({
+    meta: [
+      { title: "Detalhes da UPA — ocupação e serviços | UPA+" },
+      {
+        name: "description",
+        content:
+          "Ocupação atual, capacidade, serviços, endereço, CEP, telefone e rota da unidade. Dados de demonstração acadêmica.",
+      },
+      { property: "og:title", content: "Detalhes da UPA — UPA+" },
+      {
+        property: "og:description",
+        content: "Ocupação, serviços, endereço e rota da unidade de pronto atendimento.",
+      },
+    ],
+  }),
+
   notFoundComponent: () => (
     <div className="p-8 text-center">
       <p className="text-muted-foreground">UPA não encontrada.</p>
