@@ -67,6 +67,9 @@ function EventosScreen() {
                       <Calendar className="h-3 w-3" /> Até {formatDate(ev.data_fim)}
                     </span>
                     <span>🏥 {ups} UPAs participando</span>
+                    <span className="rounded-full bg-muted px-2 py-0.5 font-semibold text-foreground">
+                      {statusEvento(ev)}
+                    </span>
                   </div>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -74,6 +77,12 @@ function EventosScreen() {
             </button>
           );
         })}
+        <Link
+          to="/admin"
+          className="mt-2 flex items-center justify-center gap-2 rounded-2xl border border-dashed border-border py-3 text-sm font-semibold text-muted-foreground hover:bg-muted"
+        >
+          <Shield className="h-4 w-4" /> Área do gestor
+        </Link>
       </section>
 
       {open && (
@@ -86,7 +95,9 @@ function EventosScreen() {
                 <h2 className="mt-2 text-xl font-bold">{open.titulo}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {formatDate(open.data_inicio)} — {formatDate(open.data_fim)}
+                  {open.horario ? ` · ${open.horario}` : ""}
                 </p>
+                <p className="mt-1 text-xs font-semibold text-primary">{statusEvento(open)}</p>
               </div>
               <button onClick={() => setOpen(null)} aria-label="Fechar" className="rounded-full p-1.5 hover:bg-muted">
                 <X className="h-5 w-5" />
@@ -94,6 +105,11 @@ function EventosScreen() {
             </div>
 
             <p className="mt-3 text-sm text-foreground">{open.descricao}</p>
+            {open.informacoes && (
+              <p className="mt-2 rounded-2xl bg-muted px-3 py-2 text-sm text-muted-foreground">
+                {open.informacoes}
+              </p>
+            )}
 
             <h3 className="mt-5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               UPAs participantes
