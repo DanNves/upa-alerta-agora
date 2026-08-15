@@ -166,8 +166,12 @@ function MapScreen() {
                           <MapPin className="h-3 w-3" /> {u.bairro}
                           <Clock className="ml-2 h-3 w-3" /> ~{u.tempo_estimado} min
                         </div>
+                        <div className="mt-0.5 text-xs font-medium text-foreground">
+                          {u.ocupacao_atual} / {u.capacidade_max} pessoas
+                        </div>
                       </div>
                       <StatusBadge ocupacao={u.ocupacao_atual} capacidade={u.capacidade_max} size="sm" />
+
                     </button>
                   </li>
                 ))}
