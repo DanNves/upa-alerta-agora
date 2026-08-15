@@ -217,7 +217,26 @@ function UpaDetail() {
           >
             <Copy className="h-4 w-4" /> Copiar endereço completo
           </button>
+          <button
+            onClick={async () => {
+              const url = mapsUrl(upa.latitude, upa.longitude);
+              const texto = `${upa.nome} — ${upa.endereco}, ${upa.bairro}, ${upa.cidade}/${upa.estado} (CEP ${upa.cep})`;
+              if (typeof navigator !== "undefined" && "share" in navigator) {
+                try {
+                  await navigator.share({ title: upa.nome, text: texto, url });
+                  return;
+                } catch {
+                  /* usuário cancelou — segue para cópia */
+                }
+              }
+              copiar(`${texto}\n${url}`, "Localização");
+            }}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-secondary py-3 font-semibold text-secondary-foreground hover:bg-accent"
+          >
+            <Share2 className="h-4 w-4" /> Compartilhar localização
+          </button>
         </section>
+
 
         {/* Histórico */}
         <section className="rounded-3xl border border-border bg-card p-5">
