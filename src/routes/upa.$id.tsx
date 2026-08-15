@@ -1,13 +1,31 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowLeft, Phone, Copy, Navigation, Car, MapPin, Clock, Star } from "lucide-react";
+import { ArrowLeft, Phone, Copy, Navigation, Car, MapPin, Clock, Star, Share2 } from "lucide-react";
 import { useState } from "react";
 import { useStore } from "@/data/store";
-import { distanciaKm, getStatus, mapsUrl, tempoAtras, uberUrl } from "@/data/upas";
+import { distanciaKm, getStatus, mapsUrl, origemDado, tempoAtras, uberUrl } from "@/data/upas";
+import { ORIGEM_LABEL, dataHoraCompleta } from "@/data/regras";
 import { StatusBadge } from "@/components/StatusBadge";
 import { BottomNav } from "@/components/BottomNav";
 
 export const Route = createFileRoute("/upa/$id")({
   component: UpaDetail,
+  head: ({ loaderData }) => {
+    const nome = loaderData?.upa?.nome ?? "UPA";
+    return {
+      meta: [
+        { title: `${nome} — ocupação e serviços | UPA+` },
+        {
+          name: "description",
+          content: `Ocupação atual, capacidade, serviços, endereço, CEP, telefone e rota da ${nome}. Dados de demonstração acadêmica.`,
+        },
+        { property: "og:title", content: `${nome} — UPA+` },
+        {
+          property: "og:description",
+          content: `Ocupação, serviços, endereço e rota da ${nome}.`,
+        },
+      ],
+    };
+  },
   notFoundComponent: () => (
     <div className="p-8 text-center">
       <p className="text-muted-foreground">UPA não encontrada.</p>
@@ -21,6 +39,7 @@ export const Route = createFileRoute("/upa/$id")({
     return { upa };
   },
 });
+
 
 const servicoIcon: Record<string, string> = {
   "Clínico Geral": "🩺",
