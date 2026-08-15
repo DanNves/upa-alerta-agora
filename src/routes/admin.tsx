@@ -8,8 +8,25 @@ import { getStatus, tempoAtras } from "@/data/upas";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin")({
+  head: () => ({
+    meta: [
+      { title: "Painel do gestor — atualizar ocupação e campanhas | UPA+" },
+      {
+        name: "description",
+        content:
+          "Área restrita de demonstração para gestores atualizarem ocupação das UPAs, criarem campanhas e lerem feedbacks.",
+      },
+      { name: "robots", content: "noindex" },
+      { property: "og:title", content: "Painel do gestor | UPA+" },
+      {
+        property: "og:description",
+        content: "Área de gestão de ocupação, campanhas e feedbacks das UPAs.",
+      },
+    ],
+  }),
   component: AdminScreen,
 });
+
 
 type Tab = "upas" | "campanhas" | "feedbacks";
 
