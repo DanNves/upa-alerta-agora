@@ -1,12 +1,27 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Calendar, ChevronRight, X } from "lucide-react";
+import { Calendar, ChevronRight, X, Shield } from "lucide-react";
 import { useStore } from "@/data/store";
-import { type Evento } from "@/data/upas";
+import { statusEvento, type Evento } from "@/data/upas";
 import { StatusBadge } from "@/components/StatusBadge";
 import { BottomNav } from "@/components/BottomNav";
 
 export const Route = createFileRoute("/eventos")({
+  head: () => ({
+    meta: [
+      { title: "Eventos e campanhas de saúde nas UPAs | UPA+" },
+      {
+        name: "description",
+        content:
+          "Campanhas de vacinação, testagem e mutirões nas UPAs de Salvador, com datas e unidades participantes.",
+      },
+      { property: "og:title", content: "Eventos e campanhas | UPA+" },
+      {
+        property: "og:description",
+        content: "Campanhas e mutirões de saúde nas UPAs de Salvador com datas e unidades.",
+      },
+    ],
+  }),
   component: EventosScreen,
 });
 
@@ -14,6 +29,7 @@ function formatDate(iso: string) {
   const d = new Date(iso + "T00:00:00");
   return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 }
+
 
 function EventosScreen() {
   const [open, setOpen] = useState<Evento | null>(null);
