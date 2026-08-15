@@ -114,15 +114,22 @@ function UpaDetail() {
         <section className="rounded-3xl border border-border bg-card p-5">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-3xl font-bold" style={{ color: status.cor }}>
-                {status.pct}%
-              </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-2xl font-bold text-foreground">
                 {upa.ocupacao_atual} / {upa.capacidade_max} pessoas
+              </div>
+              <div className="text-lg font-semibold" style={{ color: status.cor }}>
+                {status.pct}% de ocupação
               </div>
             </div>
             <StatusBadge ocupacao={upa.ocupacao_atual} capacidade={upa.capacidade_max} size="lg" />
           </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Atualizado {tempoAtras(upa.atualizado_em)} · Última atualização:{" "}
+            {dataHoraCompleta(upa.atualizado_em)}
+            <br />
+            Origem: {ORIGEM_LABEL[origemDado(upa)]}
+          </p>
+
           <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
             <div className="rounded-2xl bg-muted px-3 py-3">
               <div className="flex items-center gap-1.5 text-muted-foreground">
