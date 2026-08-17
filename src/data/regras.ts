@@ -51,13 +51,23 @@ export function scoreRecomendacao(pct: number, distanciaKm: number): number {
   return pct * SCORE_PESOS.ocupacao + distanciaKm * 10 * SCORE_PESOS.distancia;
 }
 
-/** RN09 — Origem do dado de ocupação deve ser sempre identificável. */
+/**
+ * RN09 — Origem do dado de ocupação deve ser sempre identificável.
+ * "api" está reservado para futura integração com fonte oficial autorizada
+ * (não implementada neste protótipo).
+ */
 export type OrigemDado = "manual" | "simulada" | "api";
 
 export const ORIGEM_LABEL: Record<OrigemDado, string> = {
-  manual: "Cadastro manual (protótipo)",
-  simulada: "Dado simulado para demonstração acadêmica",
-  api: "Integração oficial",
+  manual: "Atualizado manualmente pelo gestor",
+  simulada: "Dados simulados para demonstração acadêmica",
+  api: "Integração oficial (não disponível neste protótipo)",
+};
+
+export const ORIGEM_CURTA: Record<OrigemDado, string> = {
+  manual: "Gestor",
+  simulada: "Simulado",
+  api: "Oficial",
 };
 
 /** Aviso obrigatório de dados não oficiais. */
