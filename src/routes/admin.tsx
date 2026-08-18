@@ -126,42 +126,71 @@ function TabBtn({
 
 function EditarUpas() {
   const upas = useStore((s) => s.upas);
-  const updateUpa = useStore((s) => s.updateUpa);
 
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">
-        Selecione uma UPA para ajustar lotação e fila.
+        Ajuste ocupação, capacidade, tempo estimado, disponibilidade e serviços de cada unidade.
       </p>
       {upas.map((u) => (
-        <UpaEditorCard key={u.id} upaId={u.id} updateUpa={updateUpa} />
+        <UpaEditorCard key={u.id} upaId={u.id} />
       ))}
       <div className="rounded-xl border border-dashed border-border bg-muted/40 p-3 text-xs text-muted-foreground">
         <ShieldAlert className="mr-1 inline h-3.5 w-3.5" />
-        Alterações aqui refletem em tempo real no mapa e nas listas para todos os usuários.
+        Alterações salvas aqui passam a constar como <strong>atualização manual do gestor</strong> e
+        refletem imediatamente no mapa, na busca, nos detalhes e na sugestão. A simulação automática
+        não sobrescreve esses valores até que a unidade volte ao modo simulado.
       </div>
     </div>
   );
 }
 
-function UpaEditorCard({
-  upaId,
-  updateUpa,
-}: {
-  upaId: string;
-  updateUpa: (id: string, p: Partial<{ ocupacao_atual: number; tempo_estimado: number; aberta: boolean }>) => void;
-}) {
+function UpaEditorCard({ upaId }: { upaId: string }) {
   const upa = useStore((s) => s.upas.find((x) => x.id === upaId)!);
+  const updateUpa = useStore((s) => s.updateUpa);
+  const voltarParaSimulacao = useStore((s) => s.voltarParaSimulacao);
+
   const [oc, setOc] = useState(upa.ocupacao_atual);
+  const [cap, setCap] = useState(upa.capacidade_max);
   const [tempo, setTempo] = useState(upa.tempo_estimado);
   const [aberta, setAberta] = useState(upa.aberta);
-  const status = getStatus(oc, upa.capacidade_max);
+  const [servicos, setServicos] = useState<Servico[]>(upa.servicos);
+  const status = getStatus(oc, cap);
+  const origem = origemDado(upa);
 
-  const dirty = oc !== upa.ocupacao_atual || tempo !== upa.tempo_estimado || aberta !== upa.aberta;
+  const servicosIguais =
+    servicos.length === upa.servicos.length && servicos.every((s) => upa.servicos.includes(s));
+  const dirty =
+    oc !== upa.ocupacao_atual ||
+    cap !== upa.capacidade_max ||
+    tempo !== upa.tempo_estimado ||
+    aberta !== upa.aberta ||
+    !servicosIguais;
 
   function salvar() {
-    updateUpa(upa.id, { ocupacao_atual: oc, tempo_estimado: tempo, aberta });
-    toast.success(`${upa.nome} atualizada`, { description: `Lotação ${Math.round((oc / upa.capacidade_max) * 100)}% · ${tempo} min` });
+    if (cap <= 0) return toast.error("Capacidade deve ser maior que zero");
+    if (servicos.length === 0) return toast.error("Selecione ao menos um serviço");
+    updateUpa(
+      upa.id,
+      {
+        ocupacao_atual: normalizarOcupacao(oc),
+        capacidade_max: normalizarOcupacao(cap),
+        tempo_estimado: normalizarOcupacao(tempo),
+        aberta,
+        servicos,
+      },
+      "manual",
+    );
+    toast.success(`${upa.nome} atualizada`, {
+      description: `${oc}/${cap} · ${percentualOcupacao(oc, cap)}% · ${tempo} min · origem: gestor`,
+    });
+  }
+
+  function reverter() {
+    voltarParaSimulacao(upa.id);
+    toast.success(`${upa.nome} voltou ao modo de simulação`, {
+      description: "A atualização automática volta a alterar a ocupação desta unidade.",
+    });
   }
 
   return (
@@ -169,7 +198,9 @@ function UpaEditorCard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="font-bold text-foreground">{upa.nome}</h3>
-          <p className="text-xs text-muted-foreground">Bairro {upa.bairro}</p>
+          <p className="text-xs text-muted-foreground">
+            Bairro {upa.bairro} · <span className="font-mono">{upa.id}</span>
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <span className={"text-xs font-semibold " + (aberta ? "text-[color:var(--success)]" : "text-muted-foreground")}>
@@ -178,6 +209,7 @@ function UpaEditorCard({
           <button
             role="switch"
             aria-checked={aberta}
+            aria-label="Disponibilidade da unidade"
             onClick={() => setAberta((v) => !v)}
             className={
               "relative h-6 w-11 rounded-full transition " +
@@ -196,38 +228,75 @@ function UpaEditorCard({
 
       <div className="mt-3 grid grid-cols-2 gap-2">
         <label className="block">
-          <span className="text-[11px] font-medium text-muted-foreground">Pacientes na fila</span>
+          <span className="text-[11px] font-medium text-muted-foreground">Pessoas na unidade</span>
           <input
             type="number"
             min={0}
-            max={upa.capacidade_max + 100}
             value={oc}
             onChange={(e) => setOc(Math.max(0, Number(e.target.value)))}
             className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
           />
-          <span className="mt-1 block text-[10px] text-muted-foreground">
-            Capacidade: {upa.capacidade_max}
-          </span>
+        </label>
+        <label className="block">
+          <span className="text-[11px] font-medium text-muted-foreground">Capacidade máxima</span>
+          <input
+            type="number"
+            min={1}
+            value={cap}
+            onChange={(e) => setCap(Math.max(1, Number(e.target.value)))}
+            className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+          />
         </label>
         <label className="block">
           <span className="text-[11px] font-medium text-muted-foreground">Tempo estimado (min)</span>
           <input
             type="number"
             min={0}
-            max={300}
+            max={600}
             value={tempo}
             onChange={(e) => setTempo(Math.max(0, Number(e.target.value)))}
             className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
           />
-          <span className="mt-1 block text-[10px] text-muted-foreground">
-            Atualizado {tempoAtras(upa.atualizado_em)}
-          </span>
         </label>
+        <div className="rounded-lg bg-muted px-3 py-2 text-[11px] text-muted-foreground">
+          Atualizado {tempoAtras(upa.atualizado_em)}
+          <br />
+          Origem atual: <strong className="text-foreground">{ORIGEM_CURTA[origem]}</strong>
+        </div>
+      </div>
+
+      <div className="mt-3">
+        <span className="text-[11px] font-medium text-muted-foreground">Serviços oferecidos</span>
+        <div className="mt-1.5 flex flex-wrap gap-1.5">
+          {SERVICOS_TODOS.map((s) => {
+            const on = servicos.includes(s);
+            return (
+              <button
+                key={s}
+                type="button"
+                aria-pressed={on}
+                onClick={() =>
+                  setServicos((prev) => (on ? prev.filter((x) => x !== s) : [...prev, s]))
+                }
+                className={
+                  "rounded-full border px-2.5 py-1 text-[11px] font-medium transition " +
+                  (on
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-background text-foreground hover:bg-muted")
+                }
+              >
+                {s}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="mt-3 flex items-center justify-between">
-        <StatusBadge ocupacao={oc} capacidade={upa.capacidade_max} />
-        <span className="text-xs text-muted-foreground">{status.pct}% ocupação</span>
+        <StatusBadge ocupacao={oc} capacidade={cap} />
+        <span className="text-xs text-muted-foreground">
+          {oc}/{cap} · {status.pct}% de ocupação
+        </span>
       </div>
 
       <button
@@ -235,8 +304,16 @@ function UpaEditorCard({
         onClick={salvar}
         className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#0b1530] py-3 text-sm font-semibold text-white transition hover:bg-[#11265a] disabled:opacity-50"
       >
-        <Save className="h-4 w-4" /> Confirmar Atualizações
+        <Save className="h-4 w-4" /> Confirmar atualizações
       </button>
+      {origem === "manual" && (
+        <button
+          onClick={reverter}
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-border py-2.5 text-xs font-semibold text-muted-foreground hover:bg-muted"
+        >
+          <RefreshCw className="h-3.5 w-3.5" /> Voltar esta unidade para simulação automática
+        </button>
+      )}
     </article>
   );
 }
