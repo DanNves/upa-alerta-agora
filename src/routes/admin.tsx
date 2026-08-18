@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Wrench, Megaphone, MessageSquare, Save, Trash2, Plus, Star, ShieldAlert, Lock, LogOut, Copy, User as UserIcon } from "lucide-react";
+import { Wrench, Megaphone, MessageSquare, Save, Trash2, Plus, Star, ShieldAlert, Lock, LogOut, Copy, RefreshCw, User as UserIcon } from "lucide-react";
 import { useStore } from "@/data/store";
 import { BottomNav } from "@/components/BottomNav";
 import { StatusBadge } from "@/components/StatusBadge";
-import { getStatus, tempoAtras } from "@/data/upas";
+import { getStatus, origemDado, tempoAtras, SERVICOS_TODOS, statusEvento, type Servico } from "@/data/upas";
+import { ORIGEM_CURTA, normalizarOcupacao, percentualOcupacao } from "@/data/regras";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin")({
