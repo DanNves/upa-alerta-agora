@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Wrench, Megaphone, MessageSquare, Save, Trash2, Plus, Star, ShieldAlert, Lock, LogOut, Copy, User as UserIcon } from "lucide-react";
+import { Wrench, Megaphone, MessageSquare, Save, Trash2, Plus, Star, ShieldAlert, Lock, LogOut, Copy, RefreshCw, User as UserIcon } from "lucide-react";
 import { useStore } from "@/data/store";
 import { BottomNav } from "@/components/BottomNav";
 import { StatusBadge } from "@/components/StatusBadge";
-import { getStatus, tempoAtras } from "@/data/upas";
+import { getStatus, origemDado, tempoAtras, SERVICOS_TODOS, statusEvento, type Servico } from "@/data/upas";
+import { ORIGEM_CURTA, normalizarOcupacao, percentualOcupacao } from "@/data/regras";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin")({
@@ -126,42 +127,71 @@ function TabBtn({
 
 function EditarUpas() {
   const upas = useStore((s) => s.upas);
-  const updateUpa = useStore((s) => s.updateUpa);
 
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">
-        Selecione uma UPA para ajustar lotação e fila.
+        Ajuste ocupação, capacidade, tempo estimado, disponibilidade e serviços de cada unidade.
       </p>
       {upas.map((u) => (
-        <UpaEditorCard key={u.id} upaId={u.id} updateUpa={updateUpa} />
+        <UpaEditorCard key={u.id} upaId={u.id} />
       ))}
       <div className="rounded-xl border border-dashed border-border bg-muted/40 p-3 text-xs text-muted-foreground">
         <ShieldAlert className="mr-1 inline h-3.5 w-3.5" />
-        Alterações aqui refletem em tempo real no mapa e nas listas para todos os usuários.
+        Alterações salvas aqui passam a constar como <strong>atualização manual do gestor</strong> e
+        refletem imediatamente no mapa, na busca, nos detalhes e na sugestão. A simulação automática
+        não sobrescreve esses valores até que a unidade volte ao modo simulado.
       </div>
     </div>
   );
 }
 
-function UpaEditorCard({
-  upaId,
-  updateUpa,
-}: {
-  upaId: string;
-  updateUpa: (id: string, p: Partial<{ ocupacao_atual: number; tempo_estimado: number; aberta: boolean }>) => void;
-}) {
+function UpaEditorCard({ upaId }: { upaId: string }) {
   const upa = useStore((s) => s.upas.find((x) => x.id === upaId)!);
+  const updateUpa = useStore((s) => s.updateUpa);
+  const voltarParaSimulacao = useStore((s) => s.voltarParaSimulacao);
+
   const [oc, setOc] = useState(upa.ocupacao_atual);
+  const [cap, setCap] = useState(upa.capacidade_max);
   const [tempo, setTempo] = useState(upa.tempo_estimado);
   const [aberta, setAberta] = useState(upa.aberta);
-  const status = getStatus(oc, upa.capacidade_max);
+  const [servicos, setServicos] = useState<Servico[]>(upa.servicos);
+  const status = getStatus(oc, cap);
+  const origem = origemDado(upa);
 
-  const dirty = oc !== upa.ocupacao_atual || tempo !== upa.tempo_estimado || aberta !== upa.aberta;
+  const servicosIguais =
+    servicos.length === upa.servicos.length && servicos.every((s) => upa.servicos.includes(s));
+  const dirty =
+    oc !== upa.ocupacao_atual ||
+    cap !== upa.capacidade_max ||
+    tempo !== upa.tempo_estimado ||
+    aberta !== upa.aberta ||
+    !servicosIguais;
 
   function salvar() {
-    updateUpa(upa.id, { ocupacao_atual: oc, tempo_estimado: tempo, aberta });
-    toast.success(`${upa.nome} atualizada`, { description: `Lotação ${Math.round((oc / upa.capacidade_max) * 100)}% · ${tempo} min` });
+    if (cap <= 0) return toast.error("Capacidade deve ser maior que zero");
+    if (servicos.length === 0) return toast.error("Selecione ao menos um serviço");
+    updateUpa(
+      upa.id,
+      {
+        ocupacao_atual: normalizarOcupacao(oc),
+        capacidade_max: normalizarOcupacao(cap),
+        tempo_estimado: normalizarOcupacao(tempo),
+        aberta,
+        servicos,
+      },
+      "manual",
+    );
+    toast.success(`${upa.nome} atualizada`, {
+      description: `${oc}/${cap} · ${percentualOcupacao(oc, cap)}% · ${tempo} min · origem: gestor`,
+    });
+  }
+
+  function reverter() {
+    voltarParaSimulacao(upa.id);
+    toast.success(`${upa.nome} voltou ao modo de simulação`, {
+      description: "A atualização automática volta a alterar a ocupação desta unidade.",
+    });
   }
 
   return (
@@ -169,7 +199,9 @@ function UpaEditorCard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="font-bold text-foreground">{upa.nome}</h3>
-          <p className="text-xs text-muted-foreground">Bairro {upa.bairro}</p>
+          <p className="text-xs text-muted-foreground">
+            Bairro {upa.bairro} · <span className="font-mono">{upa.id}</span>
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <span className={"text-xs font-semibold " + (aberta ? "text-[color:var(--success)]" : "text-muted-foreground")}>
@@ -178,6 +210,7 @@ function UpaEditorCard({
           <button
             role="switch"
             aria-checked={aberta}
+            aria-label="Disponibilidade da unidade"
             onClick={() => setAberta((v) => !v)}
             className={
               "relative h-6 w-11 rounded-full transition " +
@@ -196,38 +229,75 @@ function UpaEditorCard({
 
       <div className="mt-3 grid grid-cols-2 gap-2">
         <label className="block">
-          <span className="text-[11px] font-medium text-muted-foreground">Pacientes na fila</span>
+          <span className="text-[11px] font-medium text-muted-foreground">Pessoas na unidade</span>
           <input
             type="number"
             min={0}
-            max={upa.capacidade_max + 100}
             value={oc}
             onChange={(e) => setOc(Math.max(0, Number(e.target.value)))}
             className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
           />
-          <span className="mt-1 block text-[10px] text-muted-foreground">
-            Capacidade: {upa.capacidade_max}
-          </span>
+        </label>
+        <label className="block">
+          <span className="text-[11px] font-medium text-muted-foreground">Capacidade máxima</span>
+          <input
+            type="number"
+            min={1}
+            value={cap}
+            onChange={(e) => setCap(Math.max(1, Number(e.target.value)))}
+            className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+          />
         </label>
         <label className="block">
           <span className="text-[11px] font-medium text-muted-foreground">Tempo estimado (min)</span>
           <input
             type="number"
             min={0}
-            max={300}
+            max={600}
             value={tempo}
             onChange={(e) => setTempo(Math.max(0, Number(e.target.value)))}
             className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
           />
-          <span className="mt-1 block text-[10px] text-muted-foreground">
-            Atualizado {tempoAtras(upa.atualizado_em)}
-          </span>
         </label>
+        <div className="rounded-lg bg-muted px-3 py-2 text-[11px] text-muted-foreground">
+          Atualizado {tempoAtras(upa.atualizado_em)}
+          <br />
+          Origem atual: <strong className="text-foreground">{ORIGEM_CURTA[origem]}</strong>
+        </div>
+      </div>
+
+      <div className="mt-3">
+        <span className="text-[11px] font-medium text-muted-foreground">Serviços oferecidos</span>
+        <div className="mt-1.5 flex flex-wrap gap-1.5">
+          {SERVICOS_TODOS.map((s) => {
+            const on = servicos.includes(s);
+            return (
+              <button
+                key={s}
+                type="button"
+                aria-pressed={on}
+                onClick={() =>
+                  setServicos((prev) => (on ? prev.filter((x) => x !== s) : [...prev, s]))
+                }
+                className={
+                  "rounded-full border px-2.5 py-1 text-[11px] font-medium transition " +
+                  (on
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-background text-foreground hover:bg-muted")
+                }
+              >
+                {s}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="mt-3 flex items-center justify-between">
-        <StatusBadge ocupacao={oc} capacidade={upa.capacidade_max} />
-        <span className="text-xs text-muted-foreground">{status.pct}% ocupação</span>
+        <StatusBadge ocupacao={oc} capacidade={cap} />
+        <span className="text-xs text-muted-foreground">
+          {oc}/{cap} · {status.pct}% de ocupação
+        </span>
       </div>
 
       <button
@@ -235,8 +305,16 @@ function UpaEditorCard({
         onClick={salvar}
         className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#0b1530] py-3 text-sm font-semibold text-white transition hover:bg-[#11265a] disabled:opacity-50"
       >
-        <Save className="h-4 w-4" /> Confirmar Atualizações
+        <Save className="h-4 w-4" /> Confirmar atualizações
       </button>
+      {origem === "manual" && (
+        <button
+          onClick={reverter}
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-border py-2.5 text-xs font-semibold text-muted-foreground hover:bg-muted"
+        >
+          <RefreshCw className="h-3.5 w-3.5" /> Voltar esta unidade para simulação automática
+        </button>
+      )}
     </article>
   );
 }
@@ -251,10 +329,21 @@ function CriarCampanhas() {
   const addEvento = useStore((s) => s.addEvento);
   const removeEvento = useStore((s) => s.removeEvento);
 
+  const hojeISO = new Date().toISOString().slice(0, 10);
+  const umMesISO = (() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() + 1);
+    return d.toISOString().slice(0, 10);
+  })();
+
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [upaIdsRaw, setUpaIdsRaw] = useState("");
   const [icone, setIcone] = useState("💉");
+  const [dataInicio, setDataInicio] = useState(hojeISO);
+  const [dataFim, setDataFim] = useState(umMesISO);
+  const [horario, setHorario] = useState("08h às 17h");
+  const [informacoes, setInformacoes] = useState("");
 
   const selecionadas = useMemo(
     () => upaIdsRaw.split(",").map((s) => s.trim()).filter(Boolean),
@@ -266,35 +355,35 @@ function CriarCampanhas() {
     const d = descricao.trim();
     if (!t || t.length > 100) return toast.error("Título inválido (1-100 caracteres)");
     if (!d || d.length > 1000) return toast.error("Descrição inválida (1-1000 caracteres)");
-    const ids = upaIdsRaw
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    const validos = ids.filter((id) => upas.some((u) => u.id === id));
-    if (validos.length === 0) return toast.error("Informe ao menos uma UPA válida");
-
-    const hoje = new Date();
-    const fim = new Date();
-    fim.setMonth(fim.getMonth() + 1);
+    if (!dataInicio || !dataFim) return toast.error("Informe data inicial e final");
+    if (dataFim < dataInicio) return toast.error("A data final não pode ser anterior à inicial");
+    const validos = selecionadas.filter((id) => upas.some((u) => u.id === id));
+    if (validos.length === 0) return toast.error("Selecione ao menos uma UPA participante");
 
     addEvento({
       titulo: t,
       descricao: d,
-      data_inicio: hoje.toISOString().slice(0, 10),
-      data_fim: fim.toISOString().slice(0, 10),
+      data_inicio: dataInicio,
+      data_fim: dataFim,
+      horario: horario.trim() || undefined,
+      informacoes: informacoes.trim() || undefined,
       upa_ids: validos,
       icone,
     });
-    toast.success("Campanha lançada!", { description: `${validos.length} UPAs participando` });
+    toast.success("Campanha cadastrada", { description: `${validos.length} UPAs participando` });
     setTitulo("");
     setDescricao("");
     setUpaIdsRaw("");
+    setInformacoes("");
   }
 
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-base font-bold">Lançar Nova Campanha de Saúde</h2>
+        <h2 className="text-base font-bold">Cadastrar campanha de saúde</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Os dados cadastrados aqui são de demonstração acadêmica.
+        </p>
       </div>
 
       <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
@@ -302,17 +391,60 @@ function CriarCampanhas() {
           value={titulo}
           maxLength={100}
           onChange={(e) => setTitulo(e.target.value)}
-          placeholder={`Título da Campanha (${titulo.length}/100)`}
+          placeholder={`Título da campanha (${titulo.length}/100)`}
           className="w-full rounded-lg border border-border bg-background px-3 py-3 text-sm focus:border-primary focus:outline-none"
         />
         <textarea
           value={descricao}
           maxLength={1000}
           onChange={(e) => setDescricao(e.target.value)}
-          placeholder={`Descrição Detalhada (${descricao.length}/1000)`}
+          placeholder={`Descrição detalhada (${descricao.length}/1000)`}
           rows={4}
           className="w-full resize-none rounded-lg border border-border bg-background px-3 py-3 text-sm focus:border-primary focus:outline-none"
         />
+        <div className="grid grid-cols-2 gap-2">
+          <label className="block">
+            <span className="text-[11px] font-medium text-muted-foreground">Data inicial</span>
+            <input
+              type="date"
+              value={dataInicio}
+              onChange={(e) => setDataInicio(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+            />
+          </label>
+          <label className="block">
+            <span className="text-[11px] font-medium text-muted-foreground">Data final</span>
+            <input
+              type="date"
+              value={dataFim}
+              min={dataInicio}
+              onChange={(e) => setDataFim(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+            />
+          </label>
+        </div>
+        <label className="block">
+          <span className="text-[11px] font-medium text-muted-foreground">Horário</span>
+          <input
+            value={horario}
+            onChange={(e) => setHorario(e.target.value)}
+            placeholder="ex: 08h às 17h"
+            className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+          />
+        </label>
+        <label className="block">
+          <span className="text-[11px] font-medium text-muted-foreground">
+            Informações adicionais (opcional)
+          </span>
+          <textarea
+            value={informacoes}
+            maxLength={300}
+            rows={2}
+            onChange={(e) => setInformacoes(e.target.value)}
+            placeholder="ex: levar documento e cartão SUS"
+            className="mt-1 w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+          />
+        </label>
         <div>
           <div className="mb-2 flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground">
@@ -387,13 +519,13 @@ function CriarCampanhas() {
           onClick={lancar}
           className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
         >
-          <Plus className="h-4 w-4" /> Lançar Campanha de Atendimento
+          <Plus className="h-4 w-4" /> Cadastrar campanha
         </button>
       </div>
 
       <div>
         <h3 className="text-sm font-semibold text-muted-foreground">
-          Campanhas Municipais Ativas ({eventos.length}):
+          Campanhas cadastradas ({eventos.length}):
         </h3>
         <ul className="mt-2 space-y-2">
           {eventos.map((ev) => (
@@ -405,8 +537,14 @@ function CriarCampanhas() {
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-semibold">{ev.titulo}</div>
                 <div className="line-clamp-2 text-xs text-muted-foreground">{ev.descricao}</div>
-                <div className="mt-1 text-[10px] text-muted-foreground">
-                  {ev.upa_ids.length} UPAs · até {ev.data_fim}
+                <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground">
+                  <span className="rounded-full bg-muted px-2 py-0.5 font-semibold text-foreground">
+                    {statusEvento(ev)}
+                  </span>
+                  <span>
+                    {ev.upa_ids.length} UPAs · {ev.data_inicio} a {ev.data_fim}
+                    {ev.horario ? ` · ${ev.horario}` : ""}
+                  </span>
                 </div>
               </div>
               <button
