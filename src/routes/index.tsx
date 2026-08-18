@@ -1,9 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Search, Crosshair, SlidersHorizontal, Siren, MapPin, Clock, Info } from "lucide-react";
 import { useStore } from "@/data/store";
-import { distanciaKm, melhorOpcao, getStatus } from "@/data/upas";
-import { AVISO_DADOS_SIMULADOS, AVISO_RECOMENDACAO, FEATURE_FLAGS, normalizarOcupacao } from "@/data/regras";
+import { distanciaKm, getStatus, origemDado } from "@/data/upas";
+import { aplicarFiltros, filtrosAtivos } from "@/data/filtros";
+import {
+  AVISO_DADOS_SIMULADOS,
+  AVISO_RECOMENDACAO,
+  FEATURE_FLAGS,
+  ORIGEM_CURTA,
+  normalizarOcupacao,
+} from "@/data/regras";
 import { UpaBottomSheet } from "@/components/UpaBottomSheet";
 import { FilterSheet } from "@/components/FilterSheet";
 import { EmergencyModal } from "@/components/EmergencyModal";
@@ -31,13 +38,14 @@ export const Route = createFileRoute("/")({
   component: MapScreen,
 });
 
-
 function MapScreen() {
   const upas = useStore((s) => s.upas);
   const userLoc = useStore((s) => s.userLoc);
   const setUserLoc = useStore((s) => s.setUserLoc);
   const selectedId = useStore((s) => s.selectedId);
   const setSelected = useStore((s) => s.setSelected);
+  const filter = useStore((s) => s.filter);
+  const resetFilter = useStore((s) => s.resetFilter);
 
   const [query, setQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
@@ -45,30 +53,36 @@ function MapScreen() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  // Atualização SIMULADA da ocupação (demonstração acadêmica — não é tempo real).
+  // Simulação de atualização automática da ocupação (demonstração acadêmica).
+  // Unidades atualizadas manualmente pelo gestor NÃO são sobrescritas.
   useEffect(() => {
     if (!mounted || !FEATURE_FLAGS.simulacaoOcupacao) return;
     const t = setInterval(() => {
       const st = useStore.getState();
       st.upas.forEach((u) => {
+        if (origemDado(u) === "manual") return;
         const delta = Math.round((Math.random() - 0.5) * 6);
         const nova = normalizarOcupacao(Math.min(u.capacidade_max + 20, u.ocupacao_atual + delta));
-        if (nova !== u.ocupacao_atual) st.updateUpa(u.id, { ocupacao_atual: nova });
+        if (nova !== u.ocupacao_atual) st.updateUpa(u.id, { ocupacao_atual: nova }, "simulada");
       });
     }, 20000);
     return () => clearInterval(t);
   }, [mounted]);
 
-
-  const melhor = melhorOpcao(upas, userLoc);
-  const distMelhor = melhor ? distanciaKm(userLoc, { lat: melhor.upa.latitude, lng: melhor.upa.longitude }) : 0;
-
-  const filtered = upas.filter((u) =>
-    query.trim()
-      ? u.nome.toLowerCase().includes(query.toLowerCase()) ||
-        u.bairro.toLowerCase().includes(query.toLowerCase())
-      : true,
+  // Resultados filtrados: alimentam o mapa, a busca e a sugestão (fonte única).
+  const resultados = useMemo(
+    () => aplicarFiltros({ upas, userLoc, filter, termo: query }),
+    [upas, userLoc, filter, query],
   );
+  const ativos = filtrosAtivos(filter, query);
+  const visiveis = useMemo(() => resultados.map((r) => r.upa), [resultados]);
+
+  // "Opção mais adequada agora" respeita os filtros e considera só unidades abertas.
+  const melhor = useMemo(
+    () => [...resultados].filter((r) => r.upa.aberta).sort((a, b) => a.score - b.score)[0],
+    [resultados],
+  );
+  const distMelhor = melhor ? melhor.dist : 0;
 
   const selected = selectedId ? upas.find((u) => u.id === selectedId) : null;
 
@@ -87,7 +101,7 @@ function MapScreen() {
       <div className="absolute inset-0">
         {mounted ? (
           <Suspense fallback={<div className="h-full w-full animate-pulse bg-muted" />}>
-            <UPAMap onSelect={setSelected} focusId={selectedId} />
+            <UPAMap onSelect={setSelected} focusId={selectedId} upas={visiveis} />
           </Suspense>
         ) : (
           <div className="h-full w-full animate-pulse bg-muted" />
@@ -102,7 +116,7 @@ function MapScreen() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscar UPA por nome ou bairro"
+              placeholder="Buscar UPA por nome, bairro ou serviço"
               className="w-full bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none"
               aria-label="Buscar UPA"
             />
@@ -113,6 +127,23 @@ function MapScreen() {
           <Info className="h-3 w-3 shrink-0" />
           <span className="truncate">{AVISO_DADOS_SIMULADOS}</span>
         </div>
+
+        {ativos && (
+          <div className="pointer-events-auto mx-auto flex w-full max-w-md items-center justify-between gap-2 rounded-full bg-card/95 px-3 py-1.5 text-[11px] shadow-sm backdrop-blur">
+            <span className="truncate text-muted-foreground">
+              {visiveis.length} de {upas.length} unidades no mapa · filtros ativos
+            </span>
+            <button
+              onClick={() => {
+                resetFilter();
+                setQuery("");
+              }}
+              className="shrink-0 font-semibold text-primary"
+            >
+              Limpar filtros
+            </button>
+          </div>
+        )}
 
         {melhor && (
           <button
@@ -130,7 +161,10 @@ function MapScreen() {
               <div className="flex shrink-0 flex-col items-end gap-0.5 text-xs font-semibold">
                 <span
                   className="rounded-full px-2 py-0.5"
-                  style={{ backgroundColor: getStatus(melhor.upa.ocupacao_atual, melhor.upa.capacidade_max).cor }}
+                  style={{
+                    backgroundColor: getStatus(melhor.upa.ocupacao_atual, melhor.upa.capacidade_max)
+                      .cor,
+                  }}
                 >
                   {melhor.upa.ocupacao_atual}/{melhor.upa.capacidade_max} · {melhor.pct}%
                 </span>
@@ -143,15 +177,25 @@ function MapScreen() {
           </button>
         )}
 
-
         {/* Search results dropdown */}
         {query.trim() && (
           <div className="pointer-events-auto mx-auto w-full max-w-md rounded-2xl border border-border bg-card shadow-[var(--shadow-card)]">
-            {filtered.length === 0 ? (
-              <div className="p-4 text-sm text-muted-foreground">Nenhuma UPA encontrada.</div>
+            {resultados.length === 0 ? (
+              <div className="p-4 text-center text-sm text-muted-foreground">
+                Nenhuma UPA encontrada com esses critérios.
+                <button
+                  onClick={() => {
+                    resetFilter();
+                    setQuery("");
+                  }}
+                  className="mt-2 block w-full rounded-xl bg-secondary py-2 text-xs font-semibold text-secondary-foreground"
+                >
+                  Limpar filtros
+                </button>
+              </div>
             ) : (
               <ul className="max-h-72 divide-y divide-border overflow-auto">
-                {filtered.map((u) => (
+                {resultados.map(({ upa: u, dist }) => (
                   <li key={u.id}>
                     <button
                       onClick={() => {
@@ -163,20 +207,34 @@ function MapScreen() {
                       <div className="min-w-0">
                         <div className="truncate text-sm font-semibold">{u.nome}</div>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <MapPin className="h-3 w-3" /> {u.bairro}
+                          <MapPin className="h-3 w-3" /> {u.bairro} · {dist.toFixed(1)} km
                           <Clock className="ml-2 h-3 w-3" /> ~{u.tempo_estimado} min
                         </div>
                         <div className="mt-0.5 text-xs font-medium text-foreground">
-                          {u.ocupacao_atual} / {u.capacidade_max} pessoas
+                          {u.ocupacao_atual} / {u.capacidade_max} pessoas ·{" "}
+                          {getStatus(u.ocupacao_atual, u.capacidade_max).pct}% ·{" "}
+                          <span className="text-muted-foreground">{ORIGEM_CURTA[origemDado(u)]}</span>
                         </div>
                       </div>
                       <StatusBadge ocupacao={u.ocupacao_atual} capacidade={u.capacidade_max} size="sm" />
-
                     </button>
                   </li>
                 ))}
               </ul>
             )}
+          </div>
+        )}
+
+        {/* Sem resultados por filtro (sem busca ativa) */}
+        {!query.trim() && ativos && resultados.length === 0 && (
+          <div className="pointer-events-auto mx-auto w-full max-w-md rounded-2xl border border-border bg-card p-4 text-center text-sm text-muted-foreground shadow-[var(--shadow-card)]">
+            Nenhuma UPA encontrada com esses critérios.
+            <button
+              onClick={resetFilter}
+              className="mt-2 block w-full rounded-xl bg-secondary py-2 text-xs font-semibold text-secondary-foreground"
+            >
+              Limpar filtros
+            </button>
           </div>
         )}
       </div>
@@ -201,6 +259,7 @@ function MapScreen() {
               className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold text-foreground hover:bg-muted"
             >
               <SlidersHorizontal className="h-4 w-4" /> Filtrar
+              {ativos && <span className="ml-0.5 h-2 w-2 rounded-full bg-primary" aria-hidden />}
             </button>
             <div className="h-5 w-px bg-border" />
             <button

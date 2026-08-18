@@ -47,17 +47,27 @@ function Recenter({ center, zoom }: { center: [number, number]; zoom?: number })
   return null;
 }
 
-export function UPAMap({ onSelect, focusId }: { onSelect: (id: string) => void; focusId?: string | null }) {
-  const upas = useStore((s) => s.upas);
+export function UPAMap({
+  onSelect,
+  focusId,
+  upas: upasProp,
+}: {
+  onSelect: (id: string) => void;
+  focusId?: string | null;
+  /** Lista já filtrada (opcional): os filtros também valem para os pins do mapa. */
+  upas?: UPA[];
+}) {
+  const todas = useStore((s) => s.upas);
+  const upas = upasProp ?? todas;
   const userLoc = useStore((s) => s.userLoc);
 
   const center = useMemo<[number, number]>(() => {
     if (focusId) {
-      const u = upas.find((x) => x.id === focusId);
+      const u = todas.find((x) => x.id === focusId);
       if (u) return [u.latitude, u.longitude];
     }
     return [userLoc.lat, userLoc.lng];
-  }, [focusId, upas, userLoc]);
+  }, [focusId, todas, userLoc]);
 
   return (
     <MapContainer
