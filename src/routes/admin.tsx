@@ -519,13 +519,13 @@ function CriarCampanhas() {
           onClick={lancar}
           className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
         >
-          <Plus className="h-4 w-4" /> Lançar Campanha de Atendimento
+          <Plus className="h-4 w-4" /> Cadastrar campanha
         </button>
       </div>
 
       <div>
         <h3 className="text-sm font-semibold text-muted-foreground">
-          Campanhas Municipais Ativas ({eventos.length}):
+          Campanhas cadastradas ({eventos.length}):
         </h3>
         <ul className="mt-2 space-y-2">
           {eventos.map((ev) => (
@@ -537,8 +537,14 @@ function CriarCampanhas() {
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-semibold">{ev.titulo}</div>
                 <div className="line-clamp-2 text-xs text-muted-foreground">{ev.descricao}</div>
-                <div className="mt-1 text-[10px] text-muted-foreground">
-                  {ev.upa_ids.length} UPAs · até {ev.data_fim}
+                <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground">
+                  <span className="rounded-full bg-muted px-2 py-0.5 font-semibold text-foreground">
+                    {statusEvento(ev)}
+                  </span>
+                  <span>
+                    {ev.upa_ids.length} UPAs · {ev.data_inicio} a {ev.data_fim}
+                    {ev.horario ? ` · ${ev.horario}` : ""}
+                  </span>
                 </div>
               </div>
               <button
