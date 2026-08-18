@@ -329,10 +329,21 @@ function CriarCampanhas() {
   const addEvento = useStore((s) => s.addEvento);
   const removeEvento = useStore((s) => s.removeEvento);
 
+  const hojeISO = new Date().toISOString().slice(0, 10);
+  const umMesISO = (() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() + 1);
+    return d.toISOString().slice(0, 10);
+  })();
+
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [upaIdsRaw, setUpaIdsRaw] = useState("");
   const [icone, setIcone] = useState("💉");
+  const [dataInicio, setDataInicio] = useState(hojeISO);
+  const [dataFim, setDataFim] = useState(umMesISO);
+  const [horario, setHorario] = useState("08h às 17h");
+  const [informacoes, setInformacoes] = useState("");
 
   const selecionadas = useMemo(
     () => upaIdsRaw.split(",").map((s) => s.trim()).filter(Boolean),
@@ -344,35 +355,35 @@ function CriarCampanhas() {
     const d = descricao.trim();
     if (!t || t.length > 100) return toast.error("Título inválido (1-100 caracteres)");
     if (!d || d.length > 1000) return toast.error("Descrição inválida (1-1000 caracteres)");
-    const ids = upaIdsRaw
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    const validos = ids.filter((id) => upas.some((u) => u.id === id));
-    if (validos.length === 0) return toast.error("Informe ao menos uma UPA válida");
-
-    const hoje = new Date();
-    const fim = new Date();
-    fim.setMonth(fim.getMonth() + 1);
+    if (!dataInicio || !dataFim) return toast.error("Informe data inicial e final");
+    if (dataFim < dataInicio) return toast.error("A data final não pode ser anterior à inicial");
+    const validos = selecionadas.filter((id) => upas.some((u) => u.id === id));
+    if (validos.length === 0) return toast.error("Selecione ao menos uma UPA participante");
 
     addEvento({
       titulo: t,
       descricao: d,
-      data_inicio: hoje.toISOString().slice(0, 10),
-      data_fim: fim.toISOString().slice(0, 10),
+      data_inicio: dataInicio,
+      data_fim: dataFim,
+      horario: horario.trim() || undefined,
+      informacoes: informacoes.trim() || undefined,
       upa_ids: validos,
       icone,
     });
-    toast.success("Campanha lançada!", { description: `${validos.length} UPAs participando` });
+    toast.success("Campanha cadastrada", { description: `${validos.length} UPAs participando` });
     setTitulo("");
     setDescricao("");
     setUpaIdsRaw("");
+    setInformacoes("");
   }
 
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-base font-bold">Lançar Nova Campanha de Saúde</h2>
+        <h2 className="text-base font-bold">Cadastrar campanha de saúde</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Os dados cadastrados aqui são de demonstração acadêmica.
+        </p>
       </div>
 
       <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
@@ -380,17 +391,60 @@ function CriarCampanhas() {
           value={titulo}
           maxLength={100}
           onChange={(e) => setTitulo(e.target.value)}
-          placeholder={`Título da Campanha (${titulo.length}/100)`}
+          placeholder={`Título da campanha (${titulo.length}/100)`}
           className="w-full rounded-lg border border-border bg-background px-3 py-3 text-sm focus:border-primary focus:outline-none"
         />
         <textarea
           value={descricao}
           maxLength={1000}
           onChange={(e) => setDescricao(e.target.value)}
-          placeholder={`Descrição Detalhada (${descricao.length}/1000)`}
+          placeholder={`Descrição detalhada (${descricao.length}/1000)`}
           rows={4}
           className="w-full resize-none rounded-lg border border-border bg-background px-3 py-3 text-sm focus:border-primary focus:outline-none"
         />
+        <div className="grid grid-cols-2 gap-2">
+          <label className="block">
+            <span className="text-[11px] font-medium text-muted-foreground">Data inicial</span>
+            <input
+              type="date"
+              value={dataInicio}
+              onChange={(e) => setDataInicio(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+            />
+          </label>
+          <label className="block">
+            <span className="text-[11px] font-medium text-muted-foreground">Data final</span>
+            <input
+              type="date"
+              value={dataFim}
+              min={dataInicio}
+              onChange={(e) => setDataFim(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+            />
+          </label>
+        </div>
+        <label className="block">
+          <span className="text-[11px] font-medium text-muted-foreground">Horário</span>
+          <input
+            value={horario}
+            onChange={(e) => setHorario(e.target.value)}
+            placeholder="ex: 08h às 17h"
+            className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+          />
+        </label>
+        <label className="block">
+          <span className="text-[11px] font-medium text-muted-foreground">
+            Informações adicionais (opcional)
+          </span>
+          <textarea
+            value={informacoes}
+            maxLength={300}
+            rows={2}
+            onChange={(e) => setInformacoes(e.target.value)}
+            placeholder="ex: levar documento e cartão SUS"
+            className="mt-1 w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+          />
+        </label>
         <div>
           <div className="mb-2 flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground">
