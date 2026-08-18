@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { MapPin, Clock, Navigation, Search } from "lucide-react";
+import { MapPin, Clock, Navigation, Search, SlidersHorizontal } from "lucide-react";
 import { useStore } from "@/data/store";
-import { distanciaKm, mapsUrl, type Servico } from "@/data/upas";
-import { AVISO_RECOMENDACAO, percentualOcupacao, scoreRecomendacao } from "@/data/regras";
+import { mapsUrl, origemDado, type Servico } from "@/data/upas";
+import { aplicarFiltros, filtrosAtivos } from "@/data/filtros";
+import { AVISO_RECOMENDACAO, ORIGEM_CURTA, percentualOcupacao } from "@/data/regras";
 import { StatusBadge } from "@/components/StatusBadge";
+import { FilterSheet } from "@/components/FilterSheet";
 import { BottomNav } from "@/components/BottomNav";
 
 export const Route = createFileRoute("/buscar")({
@@ -26,7 +28,6 @@ export const Route = createFileRoute("/buscar")({
   component: BuscarScreen,
 });
 
-
 type Necessidade = {
   id: string;
   label: string;
@@ -45,38 +46,43 @@ const NECESSIDADES: Necessidade[] = [
   { id: "respiracao", label: "Respiração", emoji: "🫁", servicos: ["Nebulização", "Clínico Geral"] },
 ];
 
+const ORDEM_LABEL: Record<string, string> = {
+  recomendado: "sugestão (ocupação + distância)",
+  proxima: "mais próximas",
+  ocupacao: "menor ocupação",
+  tempo: "menor tempo estimado",
+  avaliacao: "melhor avaliação",
+};
+
 function BuscarScreen() {
   const upas = useStore((s) => s.upas);
   const userLoc = useStore((s) => s.userLoc);
+  const filter = useStore((s) => s.filter);
+  const resetFilter = useStore((s) => s.resetFilter);
   const [selected, setSelected] = useState<string[]>([]);
   const [termo, setTermo] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
 
-  const required = useMemo(() => {
+  const servicosNecessidade = useMemo(() => {
     const set = new Set<Servico>();
-    NECESSIDADES.filter((n) => selected.includes(n.id)).forEach((n) => n.servicos.forEach((s) => set.add(s)));
+    NECESSIDADES.filter((n) => selected.includes(n.id)).forEach((n) =>
+      n.servicos.forEach((s) => set.add(s)),
+    );
     return Array.from(set);
   }, [selected]);
 
-  const resultados = useMemo(() => {
-    const q = termo.trim().toLowerCase();
-    return upas
-      .filter((u) => u.aberta)
-      .filter((u) => (required.length ? required.some((s) => u.servicos.includes(s)) : true))
-      .filter((u) =>
-        q
-          ? u.nome.toLowerCase().includes(q) ||
-            u.bairro.toLowerCase().includes(q) ||
-            u.cidade.toLowerCase().includes(q) ||
-            u.servicos.some((s) => s.toLowerCase().includes(q))
-          : true,
-      )
-      .map((u) => {
-        const dist = distanciaKm(userLoc, { lat: u.latitude, lng: u.longitude });
-        const pct = percentualOcupacao(u.ocupacao_atual, u.capacidade_max);
-        return { upa: u, dist, score: scoreRecomendacao(pct, dist) };
-      })
-      .sort((a, b) => a.score - b.score);
-  }, [upas, userLoc, required, termo]);
+  const resultados = useMemo(
+    () => aplicarFiltros({ upas, userLoc, filter, termo, servicosNecessidade }),
+    [upas, userLoc, filter, termo, servicosNecessidade],
+  );
+
+  const ativos = filtrosAtivos(filter, termo, servicosNecessidade);
+
+  const limpar = () => {
+    setSelected([]);
+    setTermo("");
+    resetFilter();
+  };
 
   const toggle = (id: string) =>
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -100,6 +106,21 @@ function BuscarScreen() {
               className="w-full bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none"
             />
           </label>
+
+          <div className="mt-3 flex items-center gap-2">
+            <button
+              onClick={() => setShowFilters(true)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-semibold hover:bg-muted"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" /> Filtrar e ordenar
+              {ativos && <span className="h-2 w-2 rounded-full bg-primary" aria-hidden />}
+            </button>
+            {ativos && (
+              <button onClick={limpar} className="text-xs font-semibold text-primary">
+                Limpar filtros
+              </button>
+            )}
+          </div>
 
           <div className="mt-4 grid grid-cols-2 gap-2">
             {NECESSIDADES.map((n) => {
@@ -129,16 +150,11 @@ function BuscarScreen() {
         <p className="mb-3 rounded-2xl bg-muted px-3 py-2 text-[11px] leading-snug text-muted-foreground">
           {AVISO_RECOMENDACAO}
         </p>
-        <div className="mb-2 flex items-center justify-between">
+        <div className="mb-2 flex items-center justify-between gap-2">
           <h2 className="text-sm font-semibold text-muted-foreground">
-            {resultados.length} {resultados.length === 1 ? "UPA" : "UPAs"} · ordenadas pelos critérios disponíveis
+            {resultados.length} {resultados.length === 1 ? "UPA" : "UPAs"} · ordenadas por{" "}
+            {ORDEM_LABEL[filter.ordenar]}
           </h2>
-
-          {selected.length > 0 && (
-            <button onClick={() => setSelected([])} className="text-xs font-semibold text-primary">
-              Limpar
-            </button>
-          )}
         </div>
 
         <ul className="space-y-2">
@@ -159,8 +175,10 @@ function BuscarScreen() {
                   <div className="mt-1 text-xs font-semibold text-foreground">
                     {upa.ocupacao_atual} / {upa.capacidade_max} pessoas ·{" "}
                     {percentualOcupacao(upa.ocupacao_atual, upa.capacidade_max)}%
+                    <span className="ml-1 font-normal text-muted-foreground">
+                      · {ORIGEM_CURTA[origemDado(upa)]}
+                    </span>
                   </div>
-
                 </div>
                 <StatusBadge ocupacao={upa.ocupacao_atual} capacidade={upa.capacidade_max} size="sm" />
               </div>
@@ -169,9 +187,10 @@ function BuscarScreen() {
                 <span className="inline-flex items-center gap-1 text-muted-foreground">
                   <Clock className="h-3 w-3" /> ~{upa.tempo_estimado} min
                 </span>
-                <span className="text-muted-foreground">
-                  · {upa.servicos.slice(0, 3).join(" · ")}
+                <span className={upa.aberta ? "text-success font-medium" : "text-danger font-medium"}>
+                  {upa.aberta ? "Aberta" : "Fechada"}
                 </span>
+                <span className="text-muted-foreground">· {upa.servicos.slice(0, 3).join(" · ")}</span>
               </div>
 
               <div className="mt-3 grid grid-cols-2 gap-2">
@@ -183,7 +202,7 @@ function BuscarScreen() {
                   Detalhes
                 </Link>
                 <a
-                  href={mapsUrl(upa.latitude, upa.longitude, upa.nome)}
+                  href={mapsUrl(upa.latitude, upa.longitude, upa.nome, userLoc)}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center justify-center gap-1 rounded-xl bg-primary py-2 text-xs font-semibold text-primary-foreground hover:opacity-95"
@@ -195,12 +214,19 @@ function BuscarScreen() {
           ))}
           {resultados.length === 0 && (
             <li className="rounded-2xl bg-muted p-6 text-center text-sm text-muted-foreground">
-              Nenhuma UPA encontrada para os serviços selecionados.
+              Nenhuma UPA encontrada com esses critérios.
+              <button
+                onClick={limpar}
+                className="mx-auto mt-3 block rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground"
+              >
+                Limpar filtros
+              </button>
             </li>
           )}
         </ul>
       </section>
 
+      <FilterSheet open={showFilters} onClose={() => setShowFilters(false)} />
       <BottomNav />
     </main>
   );
