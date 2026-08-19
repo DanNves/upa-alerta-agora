@@ -42,3 +42,17 @@
 | RNF08 | Nenhum dado pessoal de paciente é coletado ou armazenado |
 | RNF09 | O app deixa claro que não substitui atendimento médico |
 | RNF10 | Ação de emergência acessível em, no máximo, um toque a partir do mapa |
+
+## Requisitos incorporados na consolidação do MVP
+
+| ID | Requisito | Ator | Status |
+| --- | --- | --- | --- |
+| RF24 | Combinar livremente filtros de serviço, abertura, baixa ocupação e texto | Cidadão | OK |
+| RF25 | Aplicar os mesmos filtros ao mapa e à busca, a partir de uma camada única | Cidadão | OK |
+| RF26 | Exibir o critério de ordenação ativo e permitir limpar todos os filtros | Cidadão | OK |
+| RF27 | Exibir a origem do dado de ocupação (Gestor / Simulado) em mapa, busca e detalhes | Cidadão | OK |
+| RF28 | Preservar a ocupação informada pelo gestor contra a simulação automática | Gestor | OK |
+| RF29 | Devolver a unidade ao modo de simulação automática | Gestor | OK |
+| RF30 | Editar capacidade máxima e lista de serviços da unidade | Gestor | OK |
+| RF31 | Criar campanha com datas, horário e informações adicionais | Gestor | OK |
+| RF32 | Não exibir credenciais de acesso na interface do painel | Sistema | OK |

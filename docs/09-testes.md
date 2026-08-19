@@ -37,3 +37,14 @@ requisitos funcionais e nas regras de negócio.
 - Todos os cenários de T01 a T24 concluídos sem erro de console.
 - Nenhum valor de ocupação exibido apenas em percentual, sem o par `atual/capacidade`.
 - Nenhum limite de ocupação calculado fora de `src/data/regras.ts`.
+
+## Cenários adicionais — filtros combinados e origem do dado
+
+| ID | Cenário | Passos | Resultado esperado |
+| --- | --- | --- | --- |
+| T25 | Filtros combinados | Em `/buscar`, marcar "Abertas agora" + "Só baixa ocupação" + serviço "Pediatria" | Restam apenas unidades que satisfazem os três critérios ao mesmo tempo |
+| T26 | Ordenação ativa | Alternar entre "Mais próxima de mim", "Menor ocupação", "Menor tempo" e "Melhor avaliação" | A ordem da lista muda e o critério ativo é exibido na tela |
+| T27 | Limpar filtros | Tocar em "Limpar filtros" | Volta à ordenação "Sugestão" e às 11 unidades |
+| T28 | Filtro no mapa | Aplicar filtro de serviço em `/` | Pins que não atendem ao filtro desaparecem do mapa |
+| T29 | Prioridade do gestor | Alterar ocupação no painel e aguardar 1 min | O valor informado permanece; a origem passa a "Gestor" e a simulação não sobrescreve |
+| T30 | Voltar à simulação | Tocar em "Voltar para simulação" | A origem volta a "Simulado" e a variação automática recomeça |

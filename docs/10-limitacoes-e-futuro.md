@@ -28,3 +28,9 @@
 - Aplicativo nativo com uso offline dos dados essenciais.
 - Previsão de lotação por aprendizado de máquina sobre o histórico.
 - Painel público de transparência para a gestão municipal.
+
+## Observações da última rodada de consolidação
+
+- Filtros, busca e ordenação passaram a ser resolvidos por uma camada única (`src/data/filtros.ts`), eliminando divergência entre mapa e busca.
+- A ocupação informada pelo gestor tem prioridade sobre a simulação automática; a origem do dado é sempre exibida ao cidadão.
+- Credenciais de demonstração deixaram de ser exibidas na interface do painel.
