@@ -29,3 +29,14 @@ Cada unidade indica a origem da informação de ocupação exibida:
 - **Gestor** — informado manualmente pela unidade no painel.
 - **Simulado** — gerado pelo protótipo para demonstração.
 - **Estimado** — derivado do histórico quando não há atualização recente.
+
+## Regras da consolidação do MVP
+
+| ID | Regra | Implementação |
+| --- | --- | --- |
+| RN17 | Filtros são cumulativos: serviços do painel exigem TODOS os itens marcados; a necessidade exige QUALQUER um dos serviços relacionados | `aplicarFiltros()` |
+| RN18 | Empates em qualquer ordenação são resolvidos pelo score de sugestão, mantendo a lista estável | `aplicarFiltros()` |
+| RN19 | Mapa e busca consomem exatamente a mesma lista filtrada | `aplicarFiltros()` compartilhado |
+| RN20 | Atualização do gestor define a origem como `manual` e a simulação automática ignora unidades com essa origem | `updateUpa()` + simulador em `/` |
+| RN21 | O gestor pode devolver a unidade à origem `simulada` | `voltarParaSimulacao()` |
+| RN22 | Credenciais de demonstração nunca são exibidas na interface | painel `/admin` |
