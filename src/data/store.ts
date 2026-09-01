@@ -52,7 +52,7 @@ type Store = {
   removeEvento: (id: string) => void;
 };
 
-export const useStore = create<Store>((set) => ({
+export const useStore = create<Store>((set, get) => ({
   upas: UPAS_SEED,
   eventos: EVENTOS_SEED,
   userLoc: DEFAULT_USER_LOC,
@@ -62,8 +62,9 @@ export const useStore = create<Store>((set) => ({
   favoritos: [],
   carregarFavoritos: () => set({ favoritos: lerFavoritos() }),
   toggleFavorito: (upaId) => {
-    const atual = useStore.getState().favoritos;
+    const atual: string[] = get().favoritos;
     const proximo = atual.includes(upaId) ? atual.filter((i) => i !== upaId) : [...atual, upaId];
+
     salvarFavoritos(proximo);
     set({ favoritos: proximo });
     return proximo.includes(upaId);
