@@ -251,7 +251,7 @@ function UpaDetail() {
 
 
         {/* Actions */}
-        <section className="grid grid-cols-1 gap-2">
+        <section className="grid grid-cols-1 gap-2.5">
           <a
             href={mapsUrl(upa.latitude, upa.longitude, upa.nome, userLoc)}
             target="_blank"
@@ -296,9 +296,9 @@ function UpaDetail() {
 
 
         {/* Histórico */}
-        <section className="rounded-3xl border border-border bg-card p-5">
+        <section className="rounded-3xl border border-border bg-card p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold">Ocupação · últimas 12h</h2>
+            <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Ocupação · últimas 12h</h2>
             <span className="text-xs text-muted-foreground">cap. {upa.capacidade_max}</span>
           </div>
           <div className="mt-4 flex h-32 items-end gap-1.5">
@@ -320,9 +320,9 @@ function UpaDetail() {
         </section>
 
         {/* Avaliações */}
-        <section className="rounded-3xl border border-border bg-card p-5">
+        <section className="rounded-3xl border border-border bg-card p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold">Avaliações</h2>
+            <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Avaliações</h2>
             <Link
               to="/avaliar"
               search={{ upaId: upa.id }}
@@ -379,10 +379,10 @@ function UpaDetail() {
 
 function Row({ icon, label, action }: { icon: string; label: string; action?: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-3 py-1">
-      <div className="flex min-w-0 items-start gap-2">
-        <span aria-hidden>{icon}</span>
-        <span className="text-sm text-foreground">{label}</span>
+    <div className="flex items-center justify-between gap-3 py-1.5">
+      <div className="flex min-w-0 items-start gap-2.5">
+        <span className="mt-0.5 w-5 shrink-0 text-center leading-none" aria-hidden>{icon}</span>
+        <span className="text-sm leading-relaxed text-foreground">{label}</span>
       </div>
       {action}
     </div>
