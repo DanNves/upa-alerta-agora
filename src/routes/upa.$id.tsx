@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, Phone, Copy, Navigation, Car, MapPin, Clock, Star, Share2, Bell } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast as notify } from "sonner";
 import { useStore } from "@/data/store";
 import { distanciaKm, getStatus, mapsUrl, origemDado, tempoAtras, uberUrl } from "@/data/upas";
 import { ORIGEM_LABEL, dataHoraCompleta } from "@/data/regras";
