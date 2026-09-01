@@ -59,6 +59,16 @@ export const useStore = create<Store>((set) => ({
   setUserLoc: (l) => set({ userLoc: l }),
   selectedId: null,
   setSelected: (id) => set({ selectedId: id }),
+  favoritos: [],
+  carregarFavoritos: () => set({ favoritos: lerFavoritos() }),
+  toggleFavorito: (upaId) => {
+    const atual = useStore.getState().favoritos;
+    const proximo = atual.includes(upaId) ? atual.filter((i) => i !== upaId) : [...atual, upaId];
+    salvarFavoritos(proximo);
+    set({ favoritos: proximo });
+    return proximo.includes(upaId);
+  },
+
   filter: FILTRO_PADRAO,
   setFilter: (f) => set((s) => ({ filter: { ...s.filter, ...f } })),
   resetFilter: () => set({ filter: FILTRO_PADRAO }),
