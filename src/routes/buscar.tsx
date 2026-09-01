@@ -88,16 +88,16 @@ function BuscarScreen() {
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
   return (
-    <main className="min-h-dvh bg-background pb-24">
-      <header className="bg-card px-4 pb-4 pt-6 shadow-sm">
+    <main className="min-h-dvh bg-background pb-28">
+      <header className="border-b border-border bg-card px-5 pb-5 pt-7 shadow-sm">
         <div className="mx-auto max-w-md">
-          <h1 className="text-2xl font-bold">Buscar UPA</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Buscar UPA</h1>
+          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
             Pesquise por nome, bairro ou serviço, ou selecione o que você precisa.
           </p>
 
-          <label className="mt-3 flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2.5">
-            <Search className="h-4 w-4 text-muted-foreground" />
+          <label className="mt-4 flex items-center gap-2.5 rounded-full border border-border bg-background px-4 py-3 focus-within:border-primary focus-within:ring-2 focus-within:ring-ring/25">
+            <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
             <input
               value={termo}
               onChange={(e) => setTermo(e.target.value)}
@@ -107,22 +107,22 @@ function BuscarScreen() {
             />
           </label>
 
-          <div className="mt-3 flex items-center gap-2">
+          <div className="mt-3 flex items-center gap-3">
             <button
               onClick={() => setShowFilters(true)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-semibold hover:bg-muted"
+              className="inline-flex items-center gap-2 rounded-full border border-border px-3.5 py-2 text-xs font-semibold text-foreground transition hover:bg-muted"
             >
-              <SlidersHorizontal className="h-3.5 w-3.5" /> Filtrar e ordenar
+              <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" /> Filtrar e ordenar
               {ativos && <span className="h-2 w-2 rounded-full bg-primary" aria-hidden />}
             </button>
             {ativos && (
-              <button onClick={limpar} className="text-xs font-semibold text-primary">
+              <button onClick={limpar} className="text-xs font-semibold text-primary hover:underline">
                 Limpar filtros
               </button>
             )}
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-2">
+          <div className="mt-4 grid grid-cols-2 gap-2.5">
             {NECESSIDADES.map((n) => {
               const on = selected.includes(n.id);
               return (
@@ -130,15 +130,17 @@ function BuscarScreen() {
                   key={n.id}
                   onClick={() => toggle(n.id)}
                   className={
-                    "flex items-center gap-2 rounded-2xl border px-3 py-3 text-left transition " +
+                    "flex items-center gap-2.5 rounded-2xl border px-3 py-3 text-left transition " +
                     (on
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border bg-card hover:bg-muted")
+                      ? "border-primary bg-primary/10 text-primary shadow-sm"
+                      : "border-border bg-card text-foreground hover:bg-muted")
                   }
                   aria-pressed={on}
                 >
-                  <span className="text-xl">{n.emoji}</span>
-                  <span className="text-sm font-semibold">{n.label}</span>
+                  <span className="text-lg leading-none" aria-hidden>
+                    {n.emoji}
+                  </span>
+                  <span className="text-sm font-semibold leading-tight">{n.label}</span>
                 </button>
               );
             })}
@@ -146,78 +148,95 @@ function BuscarScreen() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-md px-4 pt-4">
-        <p className="mb-3 rounded-2xl bg-muted px-3 py-2 text-[11px] leading-snug text-muted-foreground">
+      <section className="mx-auto max-w-md px-5 pt-5">
+        <p className="mb-4 rounded-2xl border border-border bg-muted px-3.5 py-2.5 text-[11px] leading-relaxed text-muted-foreground">
           {AVISO_RECOMENDACAO}
         </p>
-        <div className="mb-2 flex items-center justify-between gap-2">
-          <h2 className="text-sm font-semibold text-muted-foreground">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             {resultados.length} {resultados.length === 1 ? "UPA" : "UPAs"} · ordenadas por{" "}
             {ORDEM_LABEL[filter.ordenar]}
           </h2>
         </div>
 
-        <ul className="space-y-2">
-          {resultados.map(({ upa, dist }) => (
-            <li key={upa.id} className="rounded-2xl border border-border bg-card p-4">
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
+        <ul className="space-y-3">
+          {resultados.map(({ upa, dist }) => {
+            const pct = percentualOcupacao(upa.ocupacao_atual, upa.capacidade_max);
+            return (
+              <li
+                key={upa.id}
+                className="rounded-3xl border border-border bg-card p-5 shadow-sm transition hover:shadow-md"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <Link
+                      to="/upa/$id"
+                      params={{ id: upa.id }}
+                      className="block truncate text-base font-bold leading-tight tracking-tight text-foreground hover:text-primary"
+                    >
+                      {upa.nome}
+                    </Link>
+                    <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <MapPin className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">
+                        {upa.bairro} · {dist.toFixed(1)} km
+                      </span>
+                    </div>
+                    <div className="mt-2 text-sm font-bold tabular-nums text-foreground">
+                      {upa.ocupacao_atual} / {upa.capacidade_max} pessoas · {pct}%
+                    </div>
+                    <div className="mt-0.5 text-[11px] text-muted-foreground">
+                      {ORIGEM_CURTA[origemDado(upa)]}
+                    </div>
+                  </div>
+                  <StatusBadge
+                    ocupacao={upa.ocupacao_atual}
+                    capacidade={upa.capacidade_max}
+                    size="sm"
+                  />
+                </div>
+
+                <div className="mt-3.5 flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-xs">
+                  <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                    <Clock className="h-3.5 w-3.5 shrink-0" /> ~{upa.tempo_estimado} min
+                  </span>
+                  <span className="text-border" aria-hidden>
+                    |
+                  </span>
+                  <span className={upa.aberta ? "font-semibold text-success" : "font-semibold text-danger"}>
+                    {upa.aberta ? "Aberta" : "Fechada"}
+                  </span>
+                  <span className="w-full truncate text-muted-foreground">
+                    {upa.servicos.slice(0, 3).join(" · ")}
+                  </span>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-2.5">
                   <Link
                     to="/upa/$id"
                     params={{ id: upa.id }}
-                    className="block truncate text-base font-bold hover:text-primary"
+                    className="rounded-2xl bg-secondary py-2.5 text-center text-xs font-semibold text-secondary-foreground transition hover:bg-accent"
                   >
-                    {upa.nome}
+                    Detalhes
                   </Link>
-                  <div className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
-                    <MapPin className="h-3 w-3" /> {upa.bairro} · {dist.toFixed(1)} km
-                  </div>
-                  <div className="mt-1 text-xs font-semibold text-foreground">
-                    {upa.ocupacao_atual} / {upa.capacidade_max} pessoas ·{" "}
-                    {percentualOcupacao(upa.ocupacao_atual, upa.capacidade_max)}%
-                    <span className="ml-1 font-normal text-muted-foreground">
-                      · {ORIGEM_CURTA[origemDado(upa)]}
-                    </span>
-                  </div>
+                  <a
+                    href={mapsUrl(upa.latitude, upa.longitude, upa.nome, userLoc)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-2xl bg-primary py-2.5 text-xs font-semibold text-primary-foreground shadow-sm transition hover:opacity-95"
+                  >
+                    <Navigation className="h-3.5 w-3.5 shrink-0" /> Ir
+                  </a>
                 </div>
-                <StatusBadge ocupacao={upa.ocupacao_atual} capacidade={upa.capacidade_max} size="sm" />
-              </div>
-
-              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                <span className="inline-flex items-center gap-1 text-muted-foreground">
-                  <Clock className="h-3 w-3" /> ~{upa.tempo_estimado} min
-                </span>
-                <span className={upa.aberta ? "text-success font-medium" : "text-danger font-medium"}>
-                  {upa.aberta ? "Aberta" : "Fechada"}
-                </span>
-                <span className="text-muted-foreground">· {upa.servicos.slice(0, 3).join(" · ")}</span>
-              </div>
-
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <Link
-                  to="/upa/$id"
-                  params={{ id: upa.id }}
-                  className="rounded-xl bg-secondary py-2 text-center text-xs font-semibold text-secondary-foreground hover:bg-accent"
-                >
-                  Detalhes
-                </Link>
-                <a
-                  href={mapsUrl(upa.latitude, upa.longitude, upa.nome, userLoc)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center justify-center gap-1 rounded-xl bg-primary py-2 text-xs font-semibold text-primary-foreground hover:opacity-95"
-                >
-                  <Navigation className="h-3.5 w-3.5" /> Ir
-                </a>
-              </div>
-            </li>
-          ))}
+              </li>
+            );
+          })}
           {resultados.length === 0 && (
-            <li className="rounded-2xl bg-muted p-6 text-center text-sm text-muted-foreground">
+            <li className="rounded-3xl border border-border bg-muted p-8 text-center text-sm text-muted-foreground">
               Nenhuma UPA encontrada com esses critérios.
               <button
                 onClick={limpar}
-                className="mx-auto mt-3 block rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground"
+                className="mx-auto mt-4 block rounded-2xl bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground shadow-sm"
               >
                 Limpar filtros
               </button>
@@ -225,6 +244,7 @@ function BuscarScreen() {
           )}
         </ul>
       </section>
+
 
       <FilterSheet open={showFilters} onClose={() => setShowFilters(false)} />
       <BottomNav />
