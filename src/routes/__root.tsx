@@ -112,6 +112,11 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const carregarFavoritos = useStore((s) => s.carregarFavoritos);
+  useEffect(() => {
+    carregarFavoritos();
+  }, [carregarFavoritos]);
+  useAlertaFavoritos();
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -120,3 +125,4 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
+
