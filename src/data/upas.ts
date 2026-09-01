@@ -388,6 +388,8 @@ export const EVENTOS_SEED: Evento[] = [
 export type Status = {
   label: "Baixa" | "Moderada" | "Alta" | "Superlotada";
   cor: string;
+  /** Variação escura, para texto sobre fundo claro (contraste AA). */
+  corTexto: string;
   bg: string;
   emoji: string;
   pct: number;
@@ -395,11 +397,12 @@ export type Status = {
 };
 
 const STATUS_MAP: Record<NivelOcupacao, Omit<Status, "pct">> = {
-  baixa: { label: "Baixa", cor: "#22C55E", bg: "#22C55E", emoji: "🟢", token: "success" },
-  moderada: { label: "Moderada", cor: "#F59E0B", bg: "#F59E0B", emoji: "🟡", token: "warning" },
-  alta: { label: "Alta", cor: "#EF4444", bg: "#EF4444", emoji: "🔴", token: "danger" },
-  superlotada: { label: "Superlotada", cor: "#7C3AED", bg: "#7C3AED", emoji: "🟣", token: "emergency" },
+  baixa: { label: "Baixa", cor: "#16A34A", corTexto: "#15803D", bg: "#16A34A", emoji: "🟢", token: "success" },
+  moderada: { label: "Moderada", cor: "#D97706", corTexto: "#B45309", bg: "#D97706", emoji: "🟡", token: "warning" },
+  alta: { label: "Alta", cor: "#DC2626", corTexto: "#B91C1C", bg: "#DC2626", emoji: "🔴", token: "danger" },
+  superlotada: { label: "Superlotada", cor: "#7C3AED", corTexto: "#6D28D9", bg: "#7C3AED", emoji: "🟣", token: "emergency" },
 };
+
 
 /** Indicador visual derivado das regras centralizadas (src/data/regras.ts). */
 export function getStatus(ocupacao: number, capacidade: number): Status {
