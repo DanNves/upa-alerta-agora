@@ -17,25 +17,25 @@ export function OcupacaoInfo({
   const s = getStatus(upa.ocupacao_atual, upa.capacidade_max);
   return (
     <div className="min-w-0">
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
         <span
           className={
             (size === "lg" ? "text-xl" : size === "sm" ? "text-xs" : "text-sm") +
-            " font-bold text-foreground"
+            " font-bold tabular-nums tracking-tight text-foreground"
           }
         >
           {upa.ocupacao_atual} / {upa.capacidade_max} pessoas
         </span>
         <span
-          className={(size === "sm" ? "text-xs" : "text-sm") + " font-semibold"}
-          style={{ color: s.cor }}
+          className={(size === "sm" ? "text-xs" : "text-sm") + " font-semibold tabular-nums"}
+          style={{ color: s.corTexto }}
         >
           {s.pct}% de ocupação
         </span>
         <StatusBadge ocupacao={upa.ocupacao_atual} capacidade={upa.capacidade_max} size="sm" />
       </div>
       {showAtualizacao && (
-        <p className="mt-1 text-xs text-muted-foreground">
+        <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">
           Atualizado {tempoAtras(upa.atualizado_em)}
         </p>
       )}
