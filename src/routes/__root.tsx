@@ -8,8 +8,13 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 
+import { useEffect } from "react";
+
 import { Toaster } from "@/components/ui/sonner";
+import { useStore } from "@/data/store";
+import { useAlertaFavoritos } from "@/hooks/useAlertaFavoritos";
 import appCss from "../styles.css?url";
+
 
 function NotFoundComponent() {
   return (
@@ -112,6 +117,11 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const carregarFavoritos = useStore((s) => s.carregarFavoritos);
+  useEffect(() => {
+    carregarFavoritos();
+  }, [carregarFavoritos]);
+  useAlertaFavoritos();
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -120,3 +130,4 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
+

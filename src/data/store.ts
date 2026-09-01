@@ -3,6 +3,27 @@ import { UPAS_SEED, EVENTOS_SEED, type UPA, type Evento, DEFAULT_USER_LOC } from
 import { FILTRO_PADRAO, type FilterState } from "./filtros";
 import type { OrigemDado } from "./regras";
 
+const CHAVE_FAVORITOS = "upa-plus:favoritos";
+
+function lerFavoritos(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(CHAVE_FAVORITOS);
+    return raw ? (JSON.parse(raw) as string[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function salvarFavoritos(ids: string[]) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(CHAVE_FAVORITOS, JSON.stringify(ids));
+  } catch {
+    /* modo privado / storage indisponível */
+  }
+}
+
 type Store = {
   upas: UPA[];
   eventos: Evento[];
@@ -10,8 +31,13 @@ type Store = {
   setUserLoc: (l: { lat: number; lng: number }) => void;
   selectedId: string | null;
   setSelected: (id: string | null) => void;
+  /** UPAs favoritas (monitoradas para alerta de ocupação baixa). */
+  favoritos: string[];
+  toggleFavorito: (upaId: string) => boolean;
+  carregarFavoritos: () => void;
   filter: FilterState;
   setFilter: (f: Partial<FilterState>) => void;
+
   resetFilter: () => void;
   addAvaliacao: (upaId: string, nota: number, tempo: number, comentario: string) => void;
   /**
@@ -26,13 +52,24 @@ type Store = {
   removeEvento: (id: string) => void;
 };
 
-export const useStore = create<Store>((set) => ({
+export const useStore = create<Store>((set, get) => ({
   upas: UPAS_SEED,
   eventos: EVENTOS_SEED,
   userLoc: DEFAULT_USER_LOC,
   setUserLoc: (l) => set({ userLoc: l }),
   selectedId: null,
   setSelected: (id) => set({ selectedId: id }),
+  favoritos: [],
+  carregarFavoritos: () => set({ favoritos: lerFavoritos() }),
+  toggleFavorito: (upaId) => {
+    const atual: string[] = get().favoritos;
+    const proximo = atual.includes(upaId) ? atual.filter((i) => i !== upaId) : [...atual, upaId];
+
+    salvarFavoritos(proximo);
+    set({ favoritos: proximo });
+    return proximo.includes(upaId);
+  },
+
   filter: FILTRO_PADRAO,
   setFilter: (f) => set((s) => ({ filter: { ...s.filter, ...f } })),
   resetFilter: () => set({ filter: FILTRO_PADRAO }),

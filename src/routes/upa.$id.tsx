@@ -1,11 +1,14 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowLeft, Phone, Copy, Navigation, Car, MapPin, Clock, Star, Share2 } from "lucide-react";
+import { ArrowLeft, Phone, Copy, Navigation, Car, MapPin, Clock, Star, Share2, Bell } from "lucide-react";
 import { useState } from "react";
+import { toast as notify } from "sonner";
 import { useStore } from "@/data/store";
 import { distanciaKm, getStatus, mapsUrl, origemDado, tempoAtras, uberUrl } from "@/data/upas";
 import { ORIGEM_LABEL, dataHoraCompleta } from "@/data/regras";
+import { pedirPermissaoNotificacao } from "@/hooks/useAlertaFavoritos";
 import { StatusBadge } from "@/components/StatusBadge";
 import { BottomNav } from "@/components/BottomNav";
+
 
 export const Route = createFileRoute("/upa/$id")({
   component: UpaDetail,
@@ -63,7 +66,26 @@ function UpaDetail() {
   const { id } = Route.useParams();
   const upa = useStore((s) => s.upas.find((u) => u.id === id))!;
   const userLoc = useStore((s) => s.userLoc);
+  const favoritos = useStore((s) => s.favoritos);
+  const toggleFavorito = useStore((s) => s.toggleFavorito);
+  const favorito = favoritos.includes(id);
   const [toast, setToast] = useState<string | null>(null);
+
+  const alternarFavorito = async () => {
+    const agoraFavorito = toggleFavorito(id);
+    if (!agoraFavorito) {
+      notify("Alerta desativado", { description: `Você não receberá mais avisos da ${upa.nome}.` });
+      return;
+    }
+    const permissao = await pedirPermissaoNotificacao();
+    notify.success("UPA favoritada", {
+      description:
+        permissao === "granted"
+          ? "Você receberá uma notificação quando a ocupação ficar baixa."
+          : "Avisaremos dentro do app quando a ocupação ficar baixa. Autorize as notificações do navegador para receber alertas fora do app.",
+    });
+  };
+
 
   const status = getStatus(upa.ocupacao_atual, upa.capacidade_max);
   const dist = distanciaKm(userLoc, { lat: upa.latitude, lng: upa.longitude });
@@ -101,6 +123,15 @@ function UpaDetail() {
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
+        <button
+          onClick={alternarFavorito}
+          aria-label={favorito ? "Remover dos favoritos" : "Favoritar e receber alerta de ocupação baixa"}
+          aria-pressed={favorito}
+          className="absolute right-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-2 text-xs font-semibold text-white backdrop-blur transition hover:bg-white/30"
+        >
+          <Star className="h-4 w-4" fill={favorito ? "#F59E0B" : "transparent"} stroke={favorito ? "#F59E0B" : "currentColor"} />
+          {favorito ? "Favorita" : "Favoritar"}
+        </button>
         <div className="absolute inset-x-0 bottom-0 p-5 text-white">
           <div className="text-xs uppercase tracking-wider opacity-85">
             {upa.aberta ? "● Aberta agora" : "○ Fechada"} · Atualizado {tempoAtras(upa.atualizado_em)}
@@ -108,6 +139,19 @@ function UpaDetail() {
           <h1 className="mt-1 text-2xl font-bold">{upa.nome}</h1>
         </div>
       </header>
+
+      {favorito && (
+        <div className="mx-auto mt-4 max-w-md px-4">
+          <div className="flex items-start gap-2 rounded-2xl border border-border bg-muted px-3 py-2.5 text-xs text-muted-foreground">
+            <Bell className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+            <span>
+              Monitorando esta unidade. Você será avisado quando a ocupação ficar{" "}
+              <strong className="text-foreground">baixa</strong> (até 50% da capacidade).
+            </span>
+          </div>
+        </div>
+      )}
+
 
       <div className="mx-auto max-w-md space-y-4 px-4 pt-4">
         {/* Status block */}
