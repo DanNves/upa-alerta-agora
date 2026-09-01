@@ -66,7 +66,26 @@ function UpaDetail() {
   const { id } = Route.useParams();
   const upa = useStore((s) => s.upas.find((u) => u.id === id))!;
   const userLoc = useStore((s) => s.userLoc);
+  const favoritos = useStore((s) => s.favoritos);
+  const toggleFavorito = useStore((s) => s.toggleFavorito);
+  const favorito = favoritos.includes(id);
   const [toast, setToast] = useState<string | null>(null);
+
+  const alternarFavorito = async () => {
+    const agoraFavorito = toggleFavorito(id);
+    if (!agoraFavorito) {
+      notify("Alerta desativado", { description: `Você não receberá mais avisos da ${upa.nome}.` });
+      return;
+    }
+    const permissao = await pedirPermissaoNotificacao();
+    notify.success("UPA favoritada", {
+      description:
+        permissao === "granted"
+          ? "Você receberá uma notificação quando a ocupação ficar baixa."
+          : "Avisaremos dentro do app quando a ocupação ficar baixa. Autorize as notificações do navegador para receber alertas fora do app.",
+    });
+  };
+
 
   const status = getStatus(upa.ocupacao_atual, upa.capacidade_max);
   const dist = distanciaKm(userLoc, { lat: upa.latitude, lng: upa.longitude });
