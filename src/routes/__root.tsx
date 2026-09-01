@@ -8,8 +8,13 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 
+import { useEffect } from "react";
+
 import { Toaster } from "@/components/ui/sonner";
+import { useStore } from "@/data/store";
+import { useAlertaFavoritos } from "@/hooks/useAlertaFavoritos";
 import appCss from "../styles.css?url";
+
 
 function NotFoundComponent() {
   return (
