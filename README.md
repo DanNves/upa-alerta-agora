@@ -1,4 +1,4 @@
-# UPA Radar
+# UPA+
 
 Está é minha ideia de APP, construa e crie ele completamente seguindo fielmente todos os dados, instruções detalhados e descritos no anexo. Lembre-se também de todos os aspectos de construção de um app, exemplo: usabilidade, escalabilidade responsividade, segurança, banco de dados e design moderno conforme o briefing enviado... entre muito mais. e garanta que toda a arquitetura siga as melhores práticas de mercado.
 
