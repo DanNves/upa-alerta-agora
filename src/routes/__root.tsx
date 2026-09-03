@@ -118,10 +118,15 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const carregarFavoritos = useStore((s) => s.carregarFavoritos);
+  const carregarDados = useStore((s) => s.carregarDados);
   useEffect(() => {
     carregarFavoritos();
   }, [carregarFavoritos]);
+  useEffect(() => {
+    void carregarDados();
+  }, [carregarDados]);
   useAlertaFavoritos();
+
 
   return (
     <QueryClientProvider client={queryClient}>
