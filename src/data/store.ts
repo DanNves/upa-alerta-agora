@@ -2,6 +2,14 @@ import { create } from "zustand";
 import { UPAS_SEED, EVENTOS_SEED, type UPA, type Evento, DEFAULT_USER_LOC } from "./upas";
 import { FILTRO_PADRAO, type FilterState } from "./filtros";
 import type { OrigemDado } from "./regras";
+import {
+  atualizarUpaOperacional,
+  buscarEventos,
+  buscarUpas,
+  inserirAvaliacao,
+  inserirHistoricoOcupacao,
+} from "@/integrations/supabase/dados";
+
 
 const CHAVE_FAVORITOS = "upa-plus:favoritos";
 
