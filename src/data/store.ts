@@ -43,11 +43,17 @@ type Store = {
   favoritos: string[];
   toggleFavorito: (upaId: string) => boolean;
   carregarFavoritos: () => void;
+  /** true quando as consultas ao banco falharam e os dados exibidos são a reserva local. */
+  offline: boolean;
+  carregandoDados: boolean;
+  /** Carrega unidades e campanhas do banco; em falha mantém os dados de reserva. */
+  carregarDados: () => Promise<void>;
   filter: FilterState;
   setFilter: (f: Partial<FilterState>) => void;
 
   resetFilter: () => void;
-  addAvaliacao: (upaId: string, nota: number, tempo: number, comentario: string) => void;
+  addAvaliacao: (upaId: string, nota: number, tempo: number, comentario: string) => Promise<void>;
+
   /**
    * Atualiza uma unidade registrando a origem do dado (RN15/RN17).
    * `origem` padrão é "manual" (painel do gestor); a simulação usa "simulada".
