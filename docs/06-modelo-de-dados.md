@@ -71,9 +71,11 @@ Valéria, San Martin, Santo Antônio e Cabula.
 
 ## Estado atual dos dados (referência: 2026)
 
-No MVP os dados vivem em memória (`src/data/upas.ts`) e são carregados no
-estado global (Zustand). Não há banco de dados provisionado. As campanhas
-seed usam datas de 2026 e cobrem os três status derivados pela regra RN10:
+Os dados são consultados do Supabase em tempo real e espelhados no estado
+global (Zustand). Em caso de indisponibilidade da rede, o app usa os dados
+estáticos de `src/data/upas.ts` como fallback, exibindo um aviso discreto de
+"modo offline". As campanhas seed usam datas de 2026 e cobrem os três status
+derivados pela regra RN10:
 
 | Campanha | Período | Status derivado |
 | --- | --- | --- |
@@ -81,9 +83,9 @@ seed usam datas de 2026 e cobrem os três status derivados pela regra RN10:
 | Vacinação Infantil contra Sarampo | 10/08/2026 – 31/08/2026 | Em andamento |
 | Dia D Outubro Rosa | 24/10/2026 – 25/10/2026 | Programado |
 
-## Esquema relacional de referência (evolução pós-MVP)
+## Esquema relacional de referência
 
-Modelo previsto para a migração do estado em memória para PostgreSQL.
+Modelo refletido no banco de dados PostgreSQL/Superbase utilizado pelo app.
 
 ```sql
 create type nivel_ocupacao as enum ('baixa','moderada','alta','superlotada');
