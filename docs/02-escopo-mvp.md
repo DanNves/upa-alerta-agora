@@ -25,8 +25,8 @@
 | Item | Por que ficou fora |
 | --- | --- |
 | Integração com sistemas oficiais (SUS / SMS Salvador) | Depende de convênio e acesso a APIs não públicas |
-| Autenticação real de gestores com perfis e auditoria | Exige backend e política de identidade; o protótipo usa login de demonstração |
-| Persistência em banco de dados | O MVP roda com estado em memória para viabilizar a demonstração |
+| Autenticação real de gestores com perfis e auditoria | Exige política de identidade; o protótipo usa login de demonstração |
+| Persistência em banco de dados | Implementada via Supabase (upas, eventos, avaliações, histórico de ocupação), com fallback local em caso de falha de rede |
 | Notificações push | Requer app nativo/registro de dispositivos |
 | Triagem clínica ou classificação de risco | Fora do escopo legal e ético de um protótipo acadêmico |
 | Rotas com trânsito em tempo real dentro do app | Delegado ao Google Maps / Uber |

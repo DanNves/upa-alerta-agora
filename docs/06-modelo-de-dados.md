@@ -1,7 +1,9 @@
 # 06 — Modelo de dados
 
-As entidades estão declaradas em `src/data/upas.ts`. O modelo foi mantido
-compatível com um futuro banco relacional (uma tabela por entidade).
+As entidades são lidas e gravadas no Supabase via `src/integrations/supabase/dados.ts`.
+Os dados estáticos em `src/data/upas.ts` permanecem como fallback local quando
+houver falha de conexão. O modelo relacional é refletido nas tabelas reais do
+banco (uma tabela por entidade).
 
 ## UPA
 
@@ -69,9 +71,11 @@ Valéria, San Martin, Santo Antônio e Cabula.
 
 ## Estado atual dos dados (referência: 2026)
 
-No MVP os dados vivem em memória (`src/data/upas.ts`) e são carregados no
-estado global (Zustand). Não há banco de dados provisionado. As campanhas
-seed usam datas de 2026 e cobrem os três status derivados pela regra RN10:
+Os dados são consultados do Supabase em tempo real e espelhados no estado
+global (Zustand). Em caso de indisponibilidade da rede, o app usa os dados
+estáticos de `src/data/upas.ts` como fallback, exibindo um aviso discreto de
+"modo offline". As campanhas seed usam datas de 2026 e cobrem os três status
+derivados pela regra RN10:
 
 | Campanha | Período | Status derivado |
 | --- | --- | --- |
@@ -79,9 +83,9 @@ seed usam datas de 2026 e cobrem os três status derivados pela regra RN10:
 | Vacinação Infantil contra Sarampo | 10/08/2026 – 31/08/2026 | Em andamento |
 | Dia D Outubro Rosa | 24/10/2026 – 25/10/2026 | Programado |
 
-## Esquema relacional de referência (evolução pós-MVP)
+## Esquema relacional de referência
 
-Modelo previsto para a migração do estado em memória para PostgreSQL.
+Modelo refletido no banco de dados PostgreSQL/Supabase utilizado pelo app.
 
 ```sql
 create type nivel_ocupacao as enum ('baixa','moderada','alta','superlotada');
@@ -160,7 +164,7 @@ create index on avaliacao (upa_id, criado_em desc);
 create index on ocupacao_historico (upa_id, hora desc);
 ```
 
-Regras de acesso previstas: leitura pública de `upa`, `servico`, `upa_servico`,
+Regras de acesso implementadas: leitura pública de `upa`, `servico`, `upa_servico`,
 `evento` e `evento_upa`; escrita de ocupação e campanhas restrita ao gestor
 vinculado em `gestor_upa`; `avaliacao` aceita inserção pública e leitura
 agregada. O nível de ocupação (`nivel_ocupacao`) permanece derivado em
