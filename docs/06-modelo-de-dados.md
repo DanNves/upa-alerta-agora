@@ -1,7 +1,9 @@
 # 06 — Modelo de dados
 
-As entidades estão declaradas em `src/data/upas.ts`. O modelo foi mantido
-compatível com um futuro banco relacional (uma tabela por entidade).
+As entidades são lidas e gravadas no Supabase via `src/integrations/supabase/dados.ts`.
+Os dados estáticos em `src/data/upas.ts` permanecem como fallback local quando
+houver falha de conexão. O modelo relacional é refletido nas tabelas reais do
+banco (uma tabela por entidade).
 
 ## UPA
 
