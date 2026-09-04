@@ -70,24 +70,38 @@ export function UPAMap({
   }, [focusId, todas, userLoc]);
 
   return (
-    <MapContainer
-      center={[userLoc.lat, userLoc.lng]}
-      zoom={11}
-      className="h-full w-full"
-      zoomControl={false}
-      attributionControl={false}
-    >
-      <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
-      <Recenter center={center} zoom={focusId ? 16 : undefined} />
-      <Marker position={[userLoc.lat, userLoc.lng]} icon={userIcon()} />
-      {upas.map((upa) => (
-        <Marker
-          key={`${upa.id}-${upa.ocupacao_atual}-${upa.capacidade_max}-${upa.aberta ? 1 : 0}`}
-          position={[upa.latitude, upa.longitude]}
-          icon={buildPin(upa)}
-          eventHandlers={{ click: () => onSelect(upa.id) }}
+    <div className="relative h-full w-full">
+      <MapContainer
+        center={[userLoc.lat, userLoc.lng]}
+        zoom={11}
+        className="h-full w-full"
+        zoomControl={false}
+        attributionControl={false}
+      >
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          maxZoom={19}
         />
-      ))}
-    </MapContainer>
+        <Recenter center={center} zoom={focusId ? 16 : undefined} />
+        <Marker position={[userLoc.lat, userLoc.lng]} icon={userIcon()} />
+        {upas.map((upa) => (
+          <Marker
+            key={`${upa.id}-${upa.ocupacao_atual}-${upa.capacidade_max}-${upa.aberta ? 1 : 0}`}
+            position={[upa.latitude, upa.longitude]}
+            icon={buildPin(upa)}
+            eventHandlers={{ click: () => onSelect(upa.id) }}
+          />
+        ))}
+      </MapContainer>
+      <a
+        href="https://www.openstreetmap.org/copyright"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="pointer-events-auto absolute bottom-1.5 left-1.5 z-[1000] rounded bg-white/80 px-1.5 py-0.5 text-[10px] text-slate-600 shadow-sm backdrop-blur-sm hover:underline"
+      >
+        © OpenStreetMap contributors
+      </a>
+    </div>
   );
 }
