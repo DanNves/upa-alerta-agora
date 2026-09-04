@@ -85,7 +85,7 @@ derivados pela regra RN10:
 
 ## Esquema relacional de referência
 
-Modelo refletido no banco de dados PostgreSQL/Superbase utilizado pelo app.
+Modelo refletido no banco de dados PostgreSQL/Supabase utilizado pelo app.
 
 ```sql
 create type nivel_ocupacao as enum ('baixa','moderada','alta','superlotada');
