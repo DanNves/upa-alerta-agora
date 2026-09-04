@@ -100,13 +100,14 @@ export function UPAMap({
         ))}
       </MapContainer>
       <a
-        href="https://www.openstreetmap.org/copyright"
+        href="https://www.esri.com/en-us/legal/terms/full-master-agreement"
         target="_blank"
         rel="noopener noreferrer"
         className="pointer-events-auto absolute bottom-1.5 left-1.5 z-[1000] rounded bg-white/80 px-1.5 py-0.5 text-[10px] text-slate-600 shadow-sm backdrop-blur-sm hover:underline"
       >
-        © OpenStreetMap contributors
+        Tiles © Esri
       </a>
+
     </div>
   );
 }
