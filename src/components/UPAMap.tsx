@@ -79,10 +79,15 @@ export function UPAMap({
         attributionControl={false}
       >
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          maxZoom={19}
+          url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+          attribution="Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ"
+          maxZoom={16}
         />
+        <TileLayer
+          url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}"
+          maxZoom={16}
+        />
+
         <Recenter center={center} zoom={focusId ? 16 : undefined} />
         <Marker position={[userLoc.lat, userLoc.lng]} icon={userIcon()} />
         {upas.map((upa) => (
@@ -95,13 +100,14 @@ export function UPAMap({
         ))}
       </MapContainer>
       <a
-        href="https://www.openstreetmap.org/copyright"
+        href="https://www.esri.com/en-us/legal/terms/full-master-agreement"
         target="_blank"
         rel="noopener noreferrer"
         className="pointer-events-auto absolute bottom-1.5 left-1.5 z-[1000] rounded bg-white/80 px-1.5 py-0.5 text-[10px] text-slate-600 shadow-sm backdrop-blur-sm hover:underline"
       >
-        © OpenStreetMap contributors
+        Tiles © Esri
       </a>
+
     </div>
   );
 }
