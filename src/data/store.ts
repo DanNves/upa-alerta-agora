@@ -2,6 +2,14 @@ import { create } from "zustand";
 import { UPAS_SEED, EVENTOS_SEED, type UPA, type Evento, DEFAULT_USER_LOC } from "./upas";
 import { FILTRO_PADRAO, type FilterState } from "./filtros";
 import type { OrigemDado } from "./regras";
+import {
+  atualizarUpaOperacional,
+  buscarEventos,
+  buscarUpas,
+  inserirAvaliacao,
+  inserirHistoricoOcupacao,
+} from "@/integrations/supabase/dados";
+
 
 const CHAVE_FAVORITOS = "upa-plus:favoritos";
 
@@ -35,11 +43,17 @@ type Store = {
   favoritos: string[];
   toggleFavorito: (upaId: string) => boolean;
   carregarFavoritos: () => void;
+  /** true quando as consultas ao banco falharam e os dados exibidos são a reserva local. */
+  offline: boolean;
+  carregandoDados: boolean;
+  /** Carrega unidades e campanhas do banco; em falha mantém os dados de reserva. */
+  carregarDados: () => Promise<void>;
   filter: FilterState;
   setFilter: (f: Partial<FilterState>) => void;
 
   resetFilter: () => void;
-  addAvaliacao: (upaId: string, nota: number, tempo: number, comentario: string) => void;
+  addAvaliacao: (upaId: string, nota: number, tempo: number, comentario: string) => Promise<void>;
+
   /**
    * Atualiza uma unidade registrando a origem do dado (RN15/RN17).
    * `origem` padrão é "manual" (painel do gestor); a simulação usa "simulada".
@@ -70,10 +84,23 @@ export const useStore = create<Store>((set, get) => ({
     return proximo.includes(upaId);
   },
 
+  offline: false,
+  carregandoDados: false,
+  carregarDados: async () => {
+    set({ carregandoDados: true });
+    try {
+      const [upas, eventos] = await Promise.all([buscarUpas(), buscarEventos()]);
+      set({ upas, eventos, offline: false, carregandoDados: false });
+    } catch (e) {
+      console.error("[UPA+] Falha ao carregar dados do banco; usando reserva local.", e);
+      set({ offline: true, carregandoDados: false });
+    }
+  },
+
   filter: FILTRO_PADRAO,
   setFilter: (f) => set((s) => ({ filter: { ...s.filter, ...f } })),
   resetFilter: () => set({ filter: FILTRO_PADRAO }),
-  addAvaliacao: (upaId, nota, tempo, comentario) =>
+  addAvaliacao: async (upaId, nota, tempo, comentario) => {
     set((s) => ({
       upas: s.upas.map((u) =>
         u.id === upaId
@@ -86,15 +113,41 @@ export const useStore = create<Store>((set, get) => ({
             }
           : u,
       ),
-    })),
-  updateUpa: (upaId, patch, origem = "manual") =>
+    }));
+    if (get().offline) return;
+    try {
+      await inserirAvaliacao({ upaId, nota, tempoRealMin: tempo, comentario });
+    } catch (e) {
+      console.error("[UPA+] Falha ao gravar avaliação no banco.", e);
+      set({ offline: true });
+    }
+  },
+  updateUpa: (upaId, patch, origem = "manual") => {
     set((s) => ({
       upas: s.upas.map((u) =>
         u.id === upaId
           ? { ...u, ...patch, fonte_dados: origem, atualizado_em: new Date().toISOString() }
           : u,
       ),
-    })),
+    }));
+    if (origem !== "manual" || get().offline) return;
+    const operacional: { ocupacao_atual?: number; tempo_estimado?: number; aberta?: boolean } = {};
+    if (patch.ocupacao_atual !== undefined) operacional.ocupacao_atual = patch.ocupacao_atual;
+    if (patch.tempo_estimado !== undefined) operacional.tempo_estimado = patch.tempo_estimado;
+    if (patch.aberta !== undefined) operacional.aberta = patch.aberta;
+    if (Object.keys(operacional).length === 0) return;
+    void (async () => {
+      try {
+        await atualizarUpaOperacional(upaId, operacional);
+        if (operacional.ocupacao_atual !== undefined) {
+          await inserirHistoricoOcupacao(upaId, operacional.ocupacao_atual);
+        }
+      } catch (e) {
+        console.error("[UPA+] Falha ao salvar atualização da unidade no banco.", e);
+        set({ offline: true });
+      }
+    })();
+  },
   voltarParaSimulacao: (upaId) =>
     set((s) => ({
       upas: s.upas.map((u) =>
@@ -103,6 +156,7 @@ export const useStore = create<Store>((set, get) => ({
           : u,
       ),
     })),
+
   addEvento: (e) =>
     set((s) => ({
       eventos: [{ ...e, id: `ev-${Date.now()}` }, ...s.eventos],

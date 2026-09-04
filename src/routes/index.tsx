@@ -46,6 +46,8 @@ function MapScreen() {
   const setSelected = useStore((s) => s.setSelected);
   const filter = useStore((s) => s.filter);
   const resetFilter = useStore((s) => s.resetFilter);
+  const offline = useStore((s) => s.offline);
+
 
   const [query, setQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
@@ -125,8 +127,11 @@ function MapScreen() {
 
         <div className="pointer-events-auto mx-auto flex w-full max-w-md items-center gap-1.5 rounded-full bg-card/95 px-3 py-1.5 text-[11px] text-muted-foreground shadow-sm backdrop-blur">
           <Info className="h-3 w-3 shrink-0" />
-          <span className="truncate">{AVISO_DADOS_SIMULADOS}</span>
+          <span className="truncate">
+            {offline ? "Modo offline: exibindo dados locais de reserva." : AVISO_DADOS_SIMULADOS}
+          </span>
         </div>
+
 
         {ativos && (
           <div className="pointer-events-auto mx-auto flex w-full max-w-md items-center justify-between gap-2 rounded-full bg-card/95 px-3 py-1.5 text-[11px] shadow-sm backdrop-blur">

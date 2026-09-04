@@ -43,12 +43,13 @@ function AvaliarScreen() {
   const [comentario, setComentario] = useState("");
   const [enviado, setEnviado] = useState(false);
 
-  const enviar = () => {
+  const enviar = async () => {
     if (!selected || !nota || typeof tempo !== "number") return;
-    addAvaliacao(selected, nota, tempo, comentario.trim() || "Sem comentário.");
+    await addAvaliacao(selected, nota, tempo, comentario.trim() || "Sem comentário.");
     setEnviado(true);
     setTimeout(() => navigate({ to: "/upa/$id", params: { id: selected } }), 1200);
   };
+
 
   if (enviado) {
     return (
