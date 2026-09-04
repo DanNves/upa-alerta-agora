@@ -164,7 +164,7 @@ create index on avaliacao (upa_id, criado_em desc);
 create index on ocupacao_historico (upa_id, hora desc);
 ```
 
-Regras de acesso previstas: leitura pública de `upa`, `servico`, `upa_servico`,
+Regras de acesso implementadas: leitura pública de `upa`, `servico`, `upa_servico`,
 `evento` e `evento_upa`; escrita de ocupação e campanhas restrita ao gestor
 vinculado em `gestor_upa`; `avaliacao` aceita inserção pública e leitura
 agregada. O nível de ocupação (`nivel_ocupacao`) permanece derivado em
