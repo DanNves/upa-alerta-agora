@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Star, Check } from "lucide-react";
 import { z } from "zod";
 import { zodValidator } from "@tanstack/zod-adapter";
@@ -42,6 +42,13 @@ function AvaliarScreen() {
   const [tempo, setTempo] = useState<number | "">("");
   const [comentario, setComentario] = useState("");
   const [enviado, setEnviado] = useState(false);
+
+  // As unidades chegam do banco depois da primeira renderização: se o id
+  // pré-selecionado não existir mais na lista carregada, adota a primeira.
+  useEffect(() => {
+    if (!upas.length) return;
+    if (!upas.some((u) => u.id === selected)) setSelected(upaId ?? upas[0]!.id);
+  }, [upas, selected, upaId]);
 
   const enviar = async () => {
     if (!selected || !nota || typeof tempo !== "number") return;
