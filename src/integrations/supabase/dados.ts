@@ -1,12 +1,12 @@
 /**
- * Camada de acesso aos dados reais (Lovable Cloud / Postgres).
+ * Camada de acesso aos dados reais (banco Supabase próprio do projeto).
  *
  * Responsabilidade exclusiva: ler e gravar registros e converter as linhas do
  * banco para os tipos já usados pelas telas (`UPA`, `Evento`).
  * NENHUMA regra de negócio vive aqui — nível de ocupação, cores e score de
  * recomendação continuam em `src/data/regras.ts`.
  */
-import { supabase } from "./client";
+import { db as supabase } from "./externo";
 import type { Evento, Servico, UPA } from "@/data/upas";
 
 type LinhaAvaliacao = {
