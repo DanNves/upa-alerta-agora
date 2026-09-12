@@ -35,8 +35,13 @@ export const Route = createFileRoute("/upa/$id")({
     </div>
   ),
   errorComponent: () => <div className="p-8 text-center text-muted-foreground">Ops, algo deu errado.</div>,
-  loader: ({ params }) => {
-    const upa = useStore.getState().upas.find((u) => u.id === params.id);
+  loader: async ({ params }) => {
+    let upa = useStore.getState().upas.find((u) => u.id === params.id);
+    if (!upa) {
+      // Acesso direto pela URL: os dados reais ainda não chegaram do banco.
+      await useStore.getState().carregarDados();
+      upa = useStore.getState().upas.find((u) => u.id === params.id);
+    }
     if (!upa) throw notFound();
     return { upa };
   },
@@ -64,7 +69,9 @@ function Toast({ msg }: { msg: string }) {
 
 function UpaDetail() {
   const { id } = Route.useParams();
-  const upa = useStore((s) => s.upas.find((u) => u.id === id))!;
+  const { upa: upaInicial } = Route.useLoaderData();
+  // Prefere o estado vivo do store; usa o dado do loader até ele chegar (acesso direto pela URL).
+  const upa = useStore((s) => s.upas.find((u) => u.id === id)) ?? upaInicial;
   const userLoc = useStore((s) => s.userLoc);
   const favoritos = useStore((s) => s.favoritos);
   const toggleFavorito = useStore((s) => s.toggleFavorito);
