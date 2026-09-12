@@ -244,38 +244,38 @@ function MapScreen() {
         )}
       </div>
 
-      {/* Right side controls */}
-      <div className="absolute right-3 top-32 z-[800] flex flex-col gap-2 sm:right-4">
-        <button
-          onClick={localizar}
-          aria-label="Localizar-me"
-          className="rounded-full bg-card p-3 text-foreground shadow-[var(--shadow-card)] border border-border hover:bg-muted"
-        >
-          <Crosshair className="h-5 w-5" />
-        </button>
-      </div>
-
       {/* Bottom action bar (only when no sheet) */}
       {!selected && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-16 z-[800] flex justify-center px-3 pb-2">
-          <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-border bg-card/95 p-1.5 shadow-[var(--shadow-card)] backdrop-blur">
+        <div className="pointer-events-none absolute inset-x-0 bottom-16 z-[800] px-3 pb-2">
+          <div className="pointer-events-auto relative flex items-center justify-center">
+            <div className="flex items-center gap-2 rounded-full border border-border bg-card/95 p-1.5 shadow-[var(--shadow-card)] backdrop-blur">
+              <button
+                onClick={() => setShowFilters(true)}
+                className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold text-foreground hover:bg-muted"
+              >
+                <SlidersHorizontal className="h-4 w-4" /> Filtrar
+                {ativos && <span className="ml-0.5 h-2 w-2 rounded-full bg-primary" aria-hidden />}
+              </button>
+              <div className="h-5 w-px bg-border" />
+              <button
+                onClick={() => setShowEmergency(true)}
+                className="inline-flex items-center gap-1.5 rounded-full bg-emergency px-3.5 py-2 text-xs font-bold text-emergency-foreground hover:opacity-95"
+              >
+                <Siren className="h-4 w-4" /> Emergência
+              </button>
+            </div>
+
             <button
-              onClick={() => setShowFilters(true)}
-              className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold text-foreground hover:bg-muted"
+              onClick={localizar}
+              aria-label="Localizar-me"
+              className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full border border-border bg-card/95 p-2.5 text-foreground shadow-[var(--shadow-card)] backdrop-blur hover:bg-muted"
             >
-              <SlidersHorizontal className="h-4 w-4" /> Filtrar
-              {ativos && <span className="ml-0.5 h-2 w-2 rounded-full bg-primary" aria-hidden />}
-            </button>
-            <div className="h-5 w-px bg-border" />
-            <button
-              onClick={() => setShowEmergency(true)}
-              className="inline-flex items-center gap-1.5 rounded-full bg-emergency px-3.5 py-2 text-xs font-bold text-emergency-foreground hover:opacity-95"
-            >
-              <Siren className="h-4 w-4" /> Emergência
+              <Crosshair className="h-5 w-5" />
             </button>
           </div>
         </div>
       )}
+
 
       {selected && <UpaBottomSheet upa={selected} onClose={() => setSelected(null)} />}
       <FilterSheet open={showFilters} onClose={() => setShowFilters(false)} />
