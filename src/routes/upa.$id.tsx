@@ -69,7 +69,9 @@ function Toast({ msg }: { msg: string }) {
 
 function UpaDetail() {
   const { id } = Route.useParams();
-  const upa = useStore((s) => s.upas.find((u) => u.id === id))!;
+  const { upa: upaInicial } = Route.useLoaderData();
+  // Prefere o estado vivo do store; usa o dado do loader até ele chegar (acesso direto pela URL).
+  const upa = useStore((s) => s.upas.find((u) => u.id === id)) ?? upaInicial;
   const userLoc = useStore((s) => s.userLoc);
   const favoritos = useStore((s) => s.favoritos);
   const toggleFavorito = useStore((s) => s.toggleFavorito);
